@@ -5,9 +5,9 @@
 
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle, Play, Pause, SkipForward, Music } from 'lucide-react';
+import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle, Play, Pause, SkipForward, Music, Maximize2, X, Eye, MessageSquare } from 'lucide-react';
 
-type Tab = 'home' | 'about' | 'articles' | 'works' | 'products';
+type Tab = 'home' | 'about' | 'articles' | 'works' | 'products' | 'guestbook';
 
 function MusicPlayer() {
   const [isPlaying, setIsPlaying] = useState(false);
@@ -108,6 +108,7 @@ export default function App() {
     { id: 'articles', label: '我的文章', icon: FileText },
     { id: 'works', label: '我的作品', icon: Briefcase },
     { id: 'products', label: '商品', icon: ShoppingBag },
+    { id: 'guestbook', label: '留言', icon: MessageSquare },
   ];
 
   return (
@@ -179,24 +180,13 @@ export default function App() {
             {activeTab === 'articles' && <ArticlesSection />}
             {activeTab === 'works' && <WorksSection />}
             {activeTab === 'products' && <ProductsSection />}
+            {activeTab === 'guestbook' && <GuestbookSection />}
           </motion.div>
         </AnimatePresence>
       </main>
 
       {/* Footer */}
-      <footer className="border-t-4 border-black py-12 px-6 bg-white">
-        <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-          <div>
-            <h3 className="font-black text-2xl uppercase italic">朔先生</h3>
-            <p className="text-gray-600 mt-2">© 2026 朔先生. 用心构建.</p>
-          </div>
-          <div className="flex gap-4">
-            <SocialButton icon={Github} />
-            <SocialButton icon={Twitter} />
-            <SocialButton icon={Linkedin} />
-          </div>
-        </div>
-      </footer>
+      <SiteFooter />
 
       <AnimatePresence>
         {showEmailModal && (
@@ -361,11 +351,145 @@ function AboutSection() {
 }
 
 function ArticlesSection() {
+  const [selectedArticle, setSelectedArticle] = useState<any>(null);
+
   const articles = [
-    { title: "粗野主义网页设计的未来", date: "2026年3月15日", category: "设计", readTime: "5 分钟阅读" },
-    { title: "精通 Tailwind CSS v4", date: "2026年2月28日", category: "开发", readTime: "8 分钟阅读" },
-    { title: "为什么排版比你想象的更重要", date: "2026年1月12日", category: "排版", readTime: "12 分钟阅读" },
-    { title: "构建可扩展的 React 应用", date: "2025年12月05日", category: "开发", readTime: "15 分钟阅读" },
+    { 
+      id: 'brutalism',
+      title: "粗野主义网页设计的未来", 
+      date: "2026年3月15日", 
+      category: "设计", 
+      readTime: "5 分钟阅读",
+      content: (
+        <>
+          <p className="text-xl font-bold">在看惯了千篇一律的极简主义和圆角阴影后，网页设计正在经历一场“文艺复兴”——粗野主义（Brutalism）的强势回归。</p>
+          <p>粗野主义一词来源于二战后的建筑风格，强调混凝土的原始质感和结构的裸露。在网页设计中，它表现为对传统美学的反叛：不加修饰的 HTML 元素、高对比度的色彩、夸张的排版以及打破常规的网格系统。</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-pink pl-4">为什么我们需要粗野主义？</h3>
+          <p>现在的网页越来越像，模板化的设计让互联网失去了个性。粗野主义并不是为了“丑”而丑，而是为了<strong>真实</strong>和<strong>直接</strong>。它去掉了伪装，让内容以最原始的力量冲击用户。</p>
+          <ul className="list-disc list-inside space-y-2 ml-4">
+            <li><strong>脱颖而出</strong>：在海量精致但无聊的网站中，粗野主义能瞬间抓住眼球。</li>
+            <li><strong>诚实表达</strong>：不再用虚假的渐变和阴影欺骗视觉。</li>
+            <li><strong>性能优势</strong>：由于去掉了大量复杂的 CSS 装饰，页面加载通常更快。</li>
+          </ul>
+          
+          <div className="bg-gray-100 border-l-8 border-black p-6 my-8 font-mono text-sm">
+            /* 粗野主义的核心 CSS 示例 */<br/>
+            .brutal-card &#123;<br/>
+            &nbsp;&nbsp;background: #FFD93D;<br/>
+            &nbsp;&nbsp;border: 4px solid #000;<br/>
+            &nbsp;&nbsp;box-shadow: 8px 8px 0px 0px #000;<br/>
+            &nbsp;&nbsp;font-weight: 900;<br/>
+            &nbsp;&nbsp;text-transform: uppercase;<br/>
+            &#125;
+          </div>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-blue pl-4">如何平衡可用性？</h3>
+          <p>纯粹的粗野主义可能会导致用户体验灾难（比如对比度过高导致刺眼，或者排版混乱导致找不到导航）。因此，“新粗野主义”（Neo-Brutalism）应运而生。它保留了大胆的配色和粗边框，但依然遵循现代的 UX 规范。比如你现在正在浏览的这个网站，就是新粗野主义的典型实践。</p>
+          <p className="font-bold mt-8">未来，网页设计不应该只是冷冰冰的商业模版，它应该是有性格的、有情绪的、有态度的。而粗野主义，正是我们找回互联网初心的武器。</p>
+        </>
+      )
+    },
+    { 
+      id: 'tailwind-v4',
+      title: "精通 Tailwind CSS v4", 
+      date: "2026年2月28日", 
+      category: "开发", 
+      readTime: "8 分钟阅读",
+      content: (
+        <>
+          <p className="text-xl font-bold">Tailwind CSS 已经彻底改变了我们编写样式的方式。随着 v4 版本的发布，这个原子化 CSS 框架迎来了一次架构级的飞跃。</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-blue pl-4">v4 的核心变革：Oxide 引擎</h3>
+          <p>v4 版本最大的亮点是引入了全新的 <strong>Oxide 引擎</strong>。它不再依赖 Node.js，而是使用 Rust 重写，这让编译速度提升了惊人的 10 倍以上！对于大型项目来说，热更新（HMR）现在是真正的瞬间完成。</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-yellow pl-4">告别配置文件</h3>
+          <p>还记得以前庞大的 <code>tailwind.config.js</code> 吗？在 v4 中，配置被极大地简化了。现在，你可以直接在 CSS 文件中使用原生的 CSS 变量来定义主题：</p>
+          
+          <div className="bg-gray-100 border-l-8 border-black p-6 my-8 font-mono text-sm">
+            @theme &#123;<br/>
+            &nbsp;&nbsp;--color-brand-pink: #FF6B6B;<br/>
+            &nbsp;&nbsp;--color-brand-blue: #4D96FF;<br/>
+            &nbsp;&nbsp;--font-black: 900;<br/>
+            &#125;
+          </div>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-pink pl-4">动态工具类与现代 CSS</h3>
+          <p>v4 全面拥抱了现代 CSS 特性。你不再需要为特定的尺寸编写繁琐的插件，它支持完全动态的任意值，并且原生支持了 CSS 原生嵌套（Nesting）和容器查询（Container Queries）。</p>
+          
+          <p className="font-bold mt-8">总结来说，Tailwind v4 让开发者更加专注于 HTML 本身，它的性能提升和配置简化，使其成为了现代前端开发不可或缺的基石。</p>
+        </>
+      )
+    },
+    { 
+      id: 'typography',
+      title: "为什么排版比你想象的更重要", 
+      date: "2026年1月12日", 
+      category: "排版", 
+      readTime: "12 分钟阅读",
+      content: (
+        <>
+          <p className="text-xl font-bold">“网页设计有 95% 是排版。”这句话在设计圈广为流传，但真正理解并践行的人却不多。</p>
+          
+          <p>当你剥去网页上所有的图片、视频、色彩和动效，剩下的几乎全是文本。用户来到你的网站，主要是为了阅读信息，而不是欣赏你的 CSS 技巧。因此，文字的呈现方式直接决定了产品的生死。</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-black pl-4">排版的三个层级</h3>
+          
+          <ul className="space-y-6 mt-6">
+            <li>
+              <strong>1. 可读性 (Legibility)</strong><br/>
+              这是最基础的要求。字号是否够大？行高（Line-height）是否舒适？对于正文，行高通常建议在 1.5 到 1.8 之间；行长控制在 60-80 个字符，否则眼睛在换行时容易疲劳。
+            </li>
+            <li>
+              <strong>2. 易读性 (Readability)</strong><br/>
+              通过层级结构（H1, H2, H3）引导用户的视线。好的排版能让用户在扫视时就能抓住重点。这需要巧妙运用字重（Font-weight）、颜色对比度和留白。
+            </li>
+            <li>
+              <strong>3. 情感传达 (Emotion)</strong><br/>
+              字体是有性格的。无衬线体（如 Inter, Roboto）传递现代、理性的感觉；衬线体（如 Playfair Display）带来优雅、传统的氛围；而手写体或粗野主义的超粗体，则在表达个性与张力。
+            </li>
+          </ul>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-pink pl-4">留白：排版呼吸的空间</h3>
+          <p>不要害怕空白。留白（Whitespace）不是空间的浪费，而是排版的灵魂。它能区分信息区块，减轻认知负荷。在现代设计中，“大字号 + 大留白”已经成为提升高级感的万能公式。</p>
+          
+          <p className="font-bold mt-8">下次设计网页时，试着先只用黑白两色和一种字体，把排版做到极致。你会发现，只要排版对了，设计就已经成功了 80%。</p>
+        </>
+      )
+    },
+    { 
+      id: 'react-scalable',
+      title: "构建可扩展的 React 应用", 
+      date: "2025年12月05日", 
+      category: "开发", 
+      readTime: "15 分钟阅读",
+      content: (
+        <>
+          <p className="text-xl font-bold">写出一个能跑的 React 应用很容易，但写出一个随着业务增长依然好维护的 React 应用，却是一门艺术。</p>
+          
+          <p>随着项目规模的扩大，组件变得臃肿，状态管理混乱，性能问题频发。如何从第一天起就为“可扩展性”打好基础？</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-blue pl-4">1. 目录结构：按功能划分 (Feature-Sliced Design)</h3>
+          <p>不要把所有的组件都扔进 <code>src/components</code>。更好的做法是按照业务功能（Feature）来组织代码。比如 <code>src/features/auth</code>，里面包含该功能专属的组件、Hooks、API 请求和类型定义。这样不仅高内聚，而且方便多人协作。</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-yellow pl-4">2. 状态管理：不要滥用全局状态</h3>
+          <p>不是所有的状态都需要放进 Redux 或 Zustand。遵循以下原则：</p>
+          <ul className="list-disc list-inside space-y-2 ml-4">
+            <li><strong>局部状态</strong>：表单输入、弹窗开关 -&gt; 用 <code>useState</code></li>
+            <li><strong>服务器状态</strong>：从 API 获取的数据 -&gt; 用 <code>React Query</code> 或 <code>SWR</code></li>
+            <li><strong>全局状态</strong>：用户登录信息、主题配置 -&gt; 用 <code>Context</code> 或 <code>Zustand</code></li>
+          </ul>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-brand-pink pl-4">3. 自定义 Hooks 提取逻辑</h3>
+          <p>如果一个组件的代码超过了 200 行，通常意味着 UI 逻辑和业务逻辑混在了一起。将业务逻辑（如数据获取、复杂计算）提取到 <code>useUserAuth()</code> 这样的自定义 Hook 中，组件只负责渲染，代码会变得极其清爽且易于测试。</p>
+          
+          <h3 className="text-2xl font-black mt-8 mb-4 border-l-8 border-black pl-4">4. 性能优化：按需引入</h3>
+          <p>不要过早优化，但要养成好习惯：使用 <code>React.lazy()</code> 配合路由实现代码分割；在渲染大型列表时使用虚拟滚动；在传递复杂对象时合理使用 <code>useMemo</code> 和 <code>useCallback</code>。</p>
+          
+          <p className="font-bold mt-8">可扩展性不是一蹴而就的，它需要团队保持纪律性，在每次代码提交时都坚守架构原则。好的架构应该像树一样，主干清晰，枝叶繁茂却不互相缠绕。</p>
+        </>
+      )
+    },
   ];
 
   return (
@@ -376,6 +500,7 @@ function ArticlesSection() {
           <motion.div 
             key={idx}
             whileHover={{ x: 10 }}
+            onClick={() => setSelectedArticle(article)}
             className="group cursor-pointer bg-white border-4 border-black p-8 rounded-2xl shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-none hover:translate-x-1 hover:translate-y-1 transition-all"
           >
             <div className="flex justify-between items-start mb-4">
@@ -391,6 +516,39 @@ function ArticlesSection() {
           </motion.div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {selectedArticle && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-12 bg-black/60 backdrop-blur-sm" onClick={() => setSelectedArticle(null)}>
+            <motion.div 
+              initial={{ opacity: 0, y: 50 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 50 }}
+              onClick={e => e.stopPropagation()}
+              className="bg-white border-4 border-black rounded-[32px] w-full max-w-4xl max-h-full overflow-y-auto shadow-[16px_16px_0px_0px_rgba(0,0,0,1)] relative flex flex-col"
+            >
+              <button 
+                onClick={() => setSelectedArticle(null)}
+                className="absolute top-6 right-6 w-10 h-10 flex items-center justify-center border-4 border-black rounded-full hover:bg-brand-pink transition-colors cursor-pointer bg-white z-10"
+              >
+                <X size={20} />
+              </button>
+              <div className="p-8 md:p-12 border-b-4 border-black bg-brand-yellow/20">
+                <span className="bg-black text-white px-3 py-1 text-sm font-bold uppercase tracking-widest rounded-full">{selectedArticle.category}</span>
+                <h2 className="text-3xl md:text-5xl font-black mt-6 mb-4">{selectedArticle.title}</h2>
+                <div className="flex items-center gap-4 text-gray-600 font-bold">
+                  <span>{selectedArticle.date}</span>
+                  <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
+                  <span>{selectedArticle.readTime}</span>
+                </div>
+              </div>
+              <div className="p-8 md:p-12 prose prose-lg max-w-none font-medium text-gray-800 leading-relaxed space-y-6">
+                {selectedArticle.content}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -531,6 +689,8 @@ function ProductsSection() {
 }
 
 function WorksSection() {
+  const [lightboxImg, setLightboxImg] = useState<string | null>(null);
+  
   const works = [
     { title: "电商平台", category: "网页设计", image: "https://picsum.photos/seed/work1/800/600", color: "bg-brand-pink" },
     { title: "银行App界面", category: "移动应用", image: "https://picsum.photos/seed/work2/800/600", color: "bg-brand-blue" },
@@ -582,14 +742,20 @@ function WorksSection() {
                 className="w-full aspect-[4/3] object-cover grayscale md:group-hover:grayscale-0 active:grayscale-0 transition-all duration-500"
                 referrerPolicy="no-referrer"
                 onClick={(e) => {
-                  // On mobile, toggle grayscale on click by temporarily adding a class
                   const img = e.currentTarget;
                   img.classList.toggle('grayscale-0');
                   img.classList.toggle('grayscale');
                 }}
               />
-              <div className="absolute inset-0 bg-black/60 opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none md:pointer-events-auto">
-                <label className="bg-white text-black px-6 py-3 rounded-full font-black flex items-center gap-2 cursor-pointer pointer-events-auto">
+              <div className="absolute inset-0 bg-black/60 opacity-0 md:group-hover:opacity-100 transition-opacity flex flex-col items-center justify-center gap-4 pointer-events-none md:pointer-events-auto">
+                <button 
+                  onClick={(e) => { e.stopPropagation(); setLightboxImg(customImages[idx] ?? work.image); }}
+                  className="bg-brand-yellow text-black w-14 h-14 rounded-full font-black flex items-center justify-center cursor-pointer pointer-events-auto hover:scale-110 transition-transform shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 active:translate-x-1"
+                  title="放大查看"
+                >
+                  <Maximize2 size={24} />
+                </button>
+                <label className="bg-white text-black px-6 py-3 rounded-full font-black flex items-center gap-2 cursor-pointer pointer-events-auto shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:translate-x-1 hover:translate-y-1 hover:shadow-none transition-all">
                   更换图片 <ExternalLink size={18} />
                   <input 
                     type="file" 
@@ -631,6 +797,28 @@ function WorksSection() {
           </div>
         ))}
       </div>
+
+      <AnimatePresence>
+        {lightboxImg && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/90 backdrop-blur-md" onClick={() => setLightboxImg(null)}>
+            <button 
+              onClick={() => setLightboxImg(null)}
+              className="absolute top-6 right-6 w-12 h-12 flex items-center justify-center border-4 border-white text-white rounded-full hover:bg-brand-pink transition-colors cursor-pointer z-10"
+            >
+              <X size={24} />
+            </button>
+            <motion.img 
+              initial={{ opacity: 0, scale: 0.9 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.9 }}
+              src={lightboxImg} 
+              alt="Fullscreen" 
+              className="max-w-full max-h-[90vh] object-contain border-4 border-white rounded-[32px] shadow-[16px_16px_0px_0px_rgba(255,255,255,0.2)]"
+              onClick={e => e.stopPropagation()}
+            />
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }
@@ -657,10 +845,135 @@ function TimelineItem({ year, role, company }: { year: string; role: string; com
   );
 }
 
+function SiteFooter() {
+  const [visits, setVisits] = useState<number | null>(null);
+
+  useEffect(() => {
+    // 使用免费的 countapi 或者简单的随机数+缓存机制模拟（因为纯前端无法跨用户统计，这里使用一个免费的 API）
+    fetch('https://api.counterapi.dev/v1/shuo_portfolio/visits/up')
+      .then(res => res.json())
+      .then(data => setVisits(data.count))
+      .catch(() => setVisits(1337)); // 接口失败时的后备数字
+  }, []);
+
+  return (
+    <footer className="border-t-4 border-black py-12 px-6 bg-white">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+        <div>
+          <h3 className="font-black text-2xl uppercase italic">朔先生</h3>
+          <p className="text-gray-600 mt-2">© 2026 朔先生. 用心构建.</p>
+          <div className="flex items-center gap-2 mt-4 text-sm font-bold text-gray-500 bg-gray-100 w-fit px-4 py-2 rounded-full border-2 border-gray-200">
+            <Eye size={16} />
+            <span>本站已被访问 {visits !== null ? visits : '...'} 次</span>
+          </div>
+        </div>
+        <div className="flex gap-4">
+            <SocialButton icon={Github} />
+            <SocialButton icon={Twitter} />
+            <SocialButton icon={Linkedin} />
+          </div>
+        </div>
+      </footer>
+    );
+  }
+  
 function SocialButton({ icon: Icon }: { icon: any }) {
   return (
     <button className="w-12 h-12 border-4 border-black rounded-xl flex items-center justify-center hover:bg-brand-yellow transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer">
       <Icon size={20} />
     </button>
+  );
+}
+function GuestbookSection() {
+    const [messages, setMessages] = useState<{id: number, name: string, content: string, date: string}[]>([]);
+  const [name, setName] = useState('');
+  const [content, setContent] = useState('');
+
+  useEffect(() => {
+    // 真实项目中这里会 fetch 后端数据库，现在我们用 localStorage 模拟并预设两条数据
+    const saved = localStorage.getItem('shuo_guestbook');
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    } else {
+      setMessages([
+        { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", date: "2026-03-21" },
+        { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", date: "2026-03-22" }
+      ]);
+    }
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !content.trim()) return;
+    
+    const newMsg = {
+      id: Date.now(),
+      name: name.trim(),
+      content: content.trim(),
+      date: new Date().toISOString().split('T')[0]
+    };
+    
+    const updated = [newMsg, ...messages];
+    setMessages(updated);
+    localStorage.setItem('shuo_guestbook', JSON.stringify(updated));
+    setName('');
+    setContent('');
+  };
+
+  return (
+    <div className="space-y-12 py-12">
+      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-yellow decoration-8 underline-offset-8">留言板</h2>
+      
+      <div className="bg-white border-4 border-black p-8 rounded-[32px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+        <form onSubmit={handleSubmit} className="space-y-6">
+          <div>
+            <label className="block font-bold mb-2 text-lg">你的昵称</label>
+            <input 
+              type="text" 
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              className="w-full border-4 border-black rounded-xl p-4 font-bold focus:outline-none focus:border-brand-blue transition-colors"
+              placeholder="怎么称呼你？"
+              maxLength={20}
+              required
+            />
+          </div>
+          <div>
+            <label className="block font-bold mb-2 text-lg">留言内容</label>
+            <textarea 
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+              className="w-full border-4 border-black rounded-xl p-4 font-bold h-32 resize-none focus:outline-none focus:border-brand-pink transition-colors"
+              placeholder="说点什么吧..."
+              maxLength={200}
+              required
+            />
+          </div>
+          <button 
+            type="submit"
+            className="bg-black text-white px-8 py-4 rounded-xl font-bold border-4 border-black hover:bg-brand-yellow hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer flex items-center gap-2"
+          >
+            <MessageSquare size={20} />
+            发表留言
+          </button>
+        </form>
+      </div>
+
+      <div className="space-y-6">
+        {messages.map(msg => (
+          <div key={msg.id} className="bg-gray-50 border-4 border-black p-6 md:p-8 rounded-[32px] shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] relative overflow-hidden group">
+            <div className="absolute top-0 right-0 w-16 h-16 bg-brand-yellow/20 rounded-bl-full -z-10 group-hover:scale-150 transition-transform duration-500"></div>
+            <div className="flex justify-between items-start mb-4">
+              <span className="font-black text-xl flex items-center gap-2">
+                <User size={20} className="text-brand-pink" />
+                {msg.name}
+              </span>
+              <span className="text-sm font-bold text-gray-500 border-2 border-gray-200 px-3 py-1 rounded-full">{msg.date}</span>
+            </div>
+            <p className="font-medium text-gray-700 text-lg leading-relaxed">{msg.content}</p>
+          </div>
+        ))}
+      </div>
+    </div>
   );
 }
