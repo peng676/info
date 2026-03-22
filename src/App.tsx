@@ -129,12 +129,20 @@ function HomeSection({ setActiveTab }: { setActiveTab: (tab: Tab) => void }) {
       </div>
 
       <div className="relative">
-        <div className="bg-brand-yellow border-4 border-black rounded-[40px] p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden aspect-square flex items-end justify-center -mt-16 md:-mt-24">
+        <div className="bg-brand-yellow border-4 border-black rounded-[40px] p-8 shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] overflow-hidden aspect-square flex items-end justify-center -mt-16 md:-mt-24 group">
           <img 
             src="https://picsum.photos/seed/avatar/800/800" 
             alt="Avatar" 
-            className="w-full h-full object-cover rounded-2xl border-4 border-black grayscale hover:grayscale-0 transition-all duration-500"
+            className="w-full h-full object-cover rounded-2xl border-4 border-black grayscale md:group-hover:grayscale-0 transition-all duration-500 cursor-pointer md:cursor-default"
             referrerPolicy="no-referrer"
+            onClick={(e) => {
+              // 手机端点击切换黑白和彩色
+              const img = e.currentTarget;
+              if (window.innerWidth < 768) {
+                img.classList.toggle('grayscale-0');
+                img.classList.toggle('grayscale');
+              }
+            }}
           />
         </div>
         {/* Decorative elements */}
