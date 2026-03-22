@@ -89,8 +89,8 @@ export default function App() {
       <footer className="border-t-4 border-black py-12 px-6 bg-white">
         <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
           <div>
-            <h3 className="font-black text-2xl uppercase italic">John Carter</h3>
-            <p className="text-gray-600 mt-2">© 2026 John Carter. Built with passion.</p>
+            <h3 className="font-black text-2xl uppercase italic">朔先生</h3>
+            <p className="text-gray-600 mt-2">© 2026 朔先生. 用心构建.</p>
           </div>
           <div className="flex gap-4">
             <SocialButton icon={Github} />
@@ -108,22 +108,22 @@ function HomeSection({ setActiveTab }: { setActiveTab: (tab: Tab) => void }) {
     <div className="grid md:grid-cols-2 gap-12 items-center min-h-[70vh]">
       <div className="space-y-8">
         <h1 className="text-6xl md:text-8xl font-black leading-tight">
-          I'm <span className="bg-brand-pink text-white px-4 inline-block transform -rotate-1">John Carter</span>,
+          我是 <span className="bg-brand-pink text-white px-4 inline-block transform -rotate-1">朔先生</span>,
           <br />
-          a Web Designer from <span className="bg-brand-blue text-white px-4 inline-block transform rotate-1">New York</span>
+          一名来自 <span className="bg-brand-blue text-white px-4 inline-block transform rotate-1">中国</span> 的网页设计师
         </h1>
         <p className="text-xl text-gray-600 max-w-md leading-relaxed">
-          Lacus, adipiscing lectus convallis purus aliquet cursus magnaol montes augue donec cras turpis ultrices nulla sed doler.
+          专注于打造独特、有趣且富有表现力的数字体验。擅长前端开发与视觉设计。
         </p>
         <div className="flex flex-wrap gap-4">
           <button className="bg-black text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-white hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer">
-            <Mail size={20} /> Get in touch
+            <Mail size={20} /> 联系我
           </button>
           <button 
             onClick={() => setActiveTab('works')}
             className="bg-white text-black px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-brand-yellow transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
           >
-            <Briefcase size={20} /> View portfolio
+            <Briefcase size={20} /> 查看作品
           </button>
         </div>
       </div>
@@ -157,24 +157,24 @@ function AboutSection() {
   return (
     <div className="space-y-16 py-12">
       <div className="max-w-3xl">
-        <h2 className="text-5xl font-black uppercase mb-8 italic underline decoration-brand-yellow decoration-8 underline-offset-8">About Me</h2>
+        <h2 className="text-5xl font-black uppercase mb-8 italic underline decoration-brand-yellow decoration-8 underline-offset-8">关于我</h2>
         <p className="text-2xl leading-relaxed text-gray-700">
-          I am a multidisciplinary designer and developer based in New York. With over 8 years of experience, I specialize in creating bold, functional, and memorable digital experiences.
+          我是一名跨领域的设计师与开发者。拥有多年的行业经验，擅长将创意与技术结合，打造令人印象深刻的互联网产品。
         </p>
       </div>
 
       <div className="grid md:grid-cols-3 gap-8">
-        <SkillCard title="Design" description="UI/UX, Branding, Motion Graphics, Typography" color="bg-brand-pink" />
-        <SkillCard title="Development" description="React, TypeScript, Tailwind, Node.js" color="bg-brand-blue" />
-        <SkillCard title="Strategy" description="Product Thinking, User Research, SEO" color="bg-brand-yellow" />
+        <SkillCard title="设计" description="UI/UX设计, 品牌包装, 动效设计, 排版" color="bg-brand-pink" />
+        <SkillCard title="开发" description="React, TypeScript, Tailwind, Node.js" color="bg-brand-blue" />
+        <SkillCard title="策略" description="产品思维, 用户研究, 搜索引擎优化" color="bg-brand-yellow" />
       </div>
 
       <div className="bg-black text-white p-12 rounded-[40px] border-4 border-black shadow-[12px_12px_0px_0px_#FFD93D]">
-        <h3 className="text-3xl font-black mb-6 uppercase">My Journey</h3>
+        <h3 className="text-3xl font-black mb-6 uppercase">我的经历</h3>
         <div className="space-y-8">
-          <TimelineItem year="2024 - Present" role="Senior Designer" company="Creative Agency" />
-          <TimelineItem year="2021 - 2024" role="Product Designer" company="Tech Startup" />
-          <TimelineItem year="2018 - 2021" role="Junior Designer" company="Design Studio" />
+          <TimelineItem year="2024 - 至今" role="高级设计师" company="创意数字机构" />
+          <TimelineItem year="2021 - 2024" role="产品设计师" company="科技初创公司" />
+          <TimelineItem year="2018 - 2021" role="初级设计师" company="独立设计工作室" />
         </div>
       </div>
     </div>
@@ -183,15 +183,15 @@ function AboutSection() {
 
 function ArticlesSection() {
   const articles = [
-    { title: "The Future of Brutalist Web Design", date: "Mar 15, 2026", category: "Design", readTime: "5 min read" },
-    { title: "Mastering Tailwind CSS v4", date: "Feb 28, 2026", category: "Dev", readTime: "8 min read" },
-    { title: "Why Typography Matters More Than You Think", date: "Jan 12, 2026", category: "Typography", readTime: "12 min read" },
-    { title: "Building Scalable React Applications", date: "Dec 05, 2025", category: "Dev", readTime: "15 min read" },
+    { title: "粗野主义网页设计的未来", date: "2026年3月15日", category: "设计", readTime: "5 分钟阅读" },
+    { title: "精通 Tailwind CSS v4", date: "2026年2月28日", category: "开发", readTime: "8 分钟阅读" },
+    { title: "为什么排版比你想象的更重要", date: "2026年1月12日", category: "排版", readTime: "12 分钟阅读" },
+    { title: "构建可扩展的 React 应用", date: "2025年12月05日", category: "开发", readTime: "15 分钟阅读" },
   ];
 
   return (
     <div className="space-y-12 py-12">
-      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-blue decoration-8 underline-offset-8">My Articles</h2>
+      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-blue decoration-8 underline-offset-8">我的文章</h2>
       <div className="grid gap-6">
         {articles.map((article, idx) => (
           <motion.div 
@@ -207,7 +207,7 @@ function ArticlesSection() {
             <div className="mt-6 flex items-center gap-4 text-gray-500 font-bold text-sm">
               <span>{article.readTime}</span>
               <div className="w-1.5 h-1.5 bg-black rounded-full"></div>
-              <span className="flex items-center gap-1">Read Article <ExternalLink size={14} /></span>
+              <span className="flex items-center gap-1">阅读文章 <ExternalLink size={14} /></span>
             </div>
           </motion.div>
         ))}
@@ -218,10 +218,10 @@ function ArticlesSection() {
 
 function WorksSection() {
   const works = [
-    { title: "E-commerce Platform", category: "Web Design", image: "https://picsum.photos/seed/work1/800/600", color: "bg-brand-pink" },
-    { title: "Banking App UI", category: "Mobile App", image: "https://picsum.photos/seed/work2/800/600", color: "bg-brand-blue" },
-    { title: "Brand Identity", category: "Branding", image: "https://picsum.photos/seed/work3/800/600", color: "bg-brand-yellow" },
-    { title: "SaaS Dashboard", category: "Web App", image: "https://picsum.photos/seed/work4/800/600", color: "bg-brand-pink" },
+    { title: "电商平台", category: "网页设计", image: "https://picsum.photos/seed/work1/800/600", color: "bg-brand-pink" },
+    { title: "银行App界面", category: "移动应用", image: "https://picsum.photos/seed/work2/800/600", color: "bg-brand-blue" },
+    { title: "品牌视觉识别", category: "品牌设计", image: "https://picsum.photos/seed/work3/800/600", color: "bg-brand-yellow" },
+    { title: "SaaS数据看板", category: "Web应用", image: "https://picsum.photos/seed/work4/800/600", color: "bg-brand-pink" },
   ];
   const [customImages, setCustomImages] = useState<Record<number, string>>(() => {
     try {
@@ -255,7 +255,7 @@ function WorksSection() {
 
   return (
     <div className="space-y-12 py-12">
-      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-pink decoration-8 underline-offset-8">My Works</h2>
+      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-pink decoration-8 underline-offset-8">我的作品</h2>
       <div className="grid md:grid-cols-2 gap-12">
         {works.map((work, idx) => (
           <div key={idx} className="group">
