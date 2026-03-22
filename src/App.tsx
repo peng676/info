@@ -5,9 +5,9 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check } from 'lucide-react';
+import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart } from 'lucide-react';
 
-type Tab = 'home' | 'about' | 'articles' | 'works';
+type Tab = 'home' | 'about' | 'articles' | 'works' | 'products';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -18,6 +18,7 @@ export default function App() {
     { id: 'about', label: '关于我', icon: User },
     { id: 'articles', label: '我的文章', icon: FileText },
     { id: 'works', label: '我的作品', icon: Briefcase },
+    { id: 'products', label: '商品', icon: ShoppingBag },
   ];
 
   return (
@@ -27,13 +28,13 @@ export default function App() {
         <div className="bg-white border-4 border-black rounded-full px-4 md:px-6 py-3 flex items-center justify-between shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative">
           
           
-          <div className="flex md:hidden items-center justify-between w-full">
-             <div className="flex items-center gap-3">
+          <div className="flex md:hidden items-center justify-between w-full overflow-x-auto pb-1 -mb-1 hide-scrollbar">
+             <div className="flex items-center gap-4 px-2 whitespace-nowrap">
               {navItems.map((item) => (
                 <button
                   key={item.id}
                   onClick={() => setActiveTab(item.id as Tab)}
-                  className={`font-bold text-xs uppercase tracking-wider transition-colors hover:text-brand-pink cursor-pointer ${
+                  className={`font-bold text-[11px] sm:text-xs uppercase tracking-wider transition-colors hover:text-brand-pink cursor-pointer flex-shrink-0 ${
                     activeTab === item.id ? 'text-brand-pink underline underline-offset-4 decoration-2' : 'text-black'
                   }`}
                 >
@@ -43,18 +44,18 @@ export default function App() {
             </div>
             <button 
               onClick={() => setShowEmailModal(true)}
-              className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer ml-2 flex-shrink-0"
+              className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer ml-2 flex-shrink-0 sticky right-0"
             >
               <Mail size={16} />
             </button>
           </div>
 
-          <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
+          <div className="hidden md:flex items-center gap-6 lg:gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-max">
             {navItems.map((item) => (
               <button
                 key={item.id}
                 onClick={() => setActiveTab(item.id as Tab)}
-                className={`font-bold text-sm uppercase tracking-wider transition-colors hover:text-brand-pink cursor-pointer ${
+                className={`font-bold text-sm uppercase tracking-wider transition-colors hover:text-brand-pink cursor-pointer whitespace-nowrap ${
                   activeTab === item.id ? 'text-brand-pink underline underline-offset-4 decoration-4' : 'text-black'
                 }`}
               >
@@ -88,6 +89,7 @@ export default function App() {
             {activeTab === 'about' && <AboutSection />}
             {activeTab === 'articles' && <ArticlesSection />}
             {activeTab === 'works' && <WorksSection />}
+            {activeTab === 'products' && <ProductsSection />}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -297,6 +299,66 @@ function ArticlesSection() {
             </div>
           </motion.div>
         ))}
+      </div>
+    </div>
+  );
+}
+
+function ProductsSection() {
+  const products = [
+    { id: 1, title: "设计系统模板", price: "¥199", description: "包含 500+ 组件的 Figma 高级设计系统，助你快速搭建企业级应用。", image: "https://picsum.photos/seed/prod1/800/600", tag: "热卖", color: "bg-brand-yellow" },
+    { id: 2, title: "前端开发实战课程", price: "¥299", description: "从零开始带你使用 React 和 Tailwind 构建现代化商业网站。", image: "https://picsum.photos/seed/prod2/800/600", tag: "上新", color: "bg-brand-pink" },
+    { id: 3, title: "个人简历网页源码", price: "¥99", description: "一套可以直接部署的响应式个人作品集源码，支持暗黑模式。", image: "https://picsum.photos/seed/prod3/800/600", tag: "基础", color: "bg-brand-blue" },
+  ];
+
+  return (
+    <div className="space-y-12 py-12">
+      <div className="flex justify-between items-end">
+        <h2 className="text-5xl font-black uppercase italic underline decoration-brand-yellow decoration-8 underline-offset-8">数字商品</h2>
+        <div className="hidden md:flex items-center gap-2 font-bold text-gray-500">
+          <ShoppingCart size={20} />
+          <span>安全支付保障</span>
+        </div>
+      </div>
+      
+      <div className="grid md:grid-cols-3 gap-8">
+        {products.map((product) => (
+          <div key={product.id} className="group flex flex-col bg-white border-4 border-black rounded-[32px] overflow-hidden shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] hover:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] hover:-translate-y-1 transition-all">
+            <div className={`h-48 ${product.color} relative border-b-4 border-black p-4 flex items-center justify-center overflow-hidden`}>
+              <span className="absolute top-4 right-4 bg-black text-white px-3 py-1 text-xs font-bold uppercase rounded-full z-10">
+                {product.tag}
+              </span>
+              <img src={product.image} alt={product.title} className="absolute inset-0 w-full h-full object-cover mix-blend-overlay opacity-50 group-hover:scale-105 transition-transform duration-500" />
+            </div>
+            
+            <div className="p-6 flex flex-col flex-grow">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-2xl font-black leading-tight">{product.title}</h3>
+              </div>
+              <p className="text-gray-600 font-medium mb-6 flex-grow">{product.description}</p>
+              
+              <div className="flex items-center justify-between mt-auto pt-4 border-t-2 border-dashed border-gray-200">
+                <span className="text-3xl font-black text-brand-pink">{product.price}</span>
+                <button 
+                  onClick={() => alert('提示：接入真实微信/支付宝支付需要企业资质和商户号。目前为展示效果。')}
+                  className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-yellow hover:text-black border-2 border-transparent hover:border-black transition-colors"
+                >
+                  立即购买
+                </button>
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+      
+      <div className="bg-gray-50 border-4 border-black p-8 rounded-2xl flex flex-col md:flex-row items-center justify-between gap-6">
+        <div>
+          <h4 className="text-xl font-black mb-2">需要定制化开发？</h4>
+          <p className="text-gray-600">承接企业级官网、小程序及内部管理系统开发，欢迎邮件联系咨询报价。</p>
+        </div>
+        <button className="bg-white text-black border-4 border-black px-8 py-3 rounded-full font-bold whitespace-nowrap hover:bg-black hover:text-white transition-colors shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:shadow-none active:translate-y-1 active:translate-x-1">
+          获取报价
+        </button>
       </div>
     </div>
   );
