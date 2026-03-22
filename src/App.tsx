@@ -5,12 +5,13 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink } from 'lucide-react';
+import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check } from 'lucide-react';
 
 type Tab = 'home' | 'about' | 'articles' | 'works';
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
+  const [showEmailModal, setShowEmailModal] = useState(false);
 
   const navItems = [
     { id: 'home', label: '首页', icon: HomeIcon },
@@ -40,12 +41,12 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <a 
-              href="mailto:1146472544@qq.com"
+            <button 
+              onClick={() => setShowEmailModal(true)}
               className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer ml-2 flex-shrink-0"
             >
               <Mail size={16} />
-            </a>
+            </button>
           </div>
 
           <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -62,12 +63,12 @@ export default function App() {
             ))}
           </div>
 
-          <a 
-            href="mailto:1146472544@qq.com"
+          <button 
+            onClick={() => setShowEmailModal(true)}
             className="hidden md:flex items-center justify-center bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer absolute right-6 top-1/2 -translate-y-1/2"
           >
             <Mail size={20} />
-          </a>
+          </button>
         </div>
       </nav>
 
@@ -83,7 +84,7 @@ export default function App() {
             exit={{ opacity: 0, y: -20 }}
             transition={{ duration: 0.3 }}
           >
-            {activeTab === 'home' && <HomeSection setActiveTab={setActiveTab} />}
+            {activeTab === 'home' && <HomeSection setActiveTab={setActiveTab} setShowEmailModal={setShowEmailModal} />}
             {activeTab === 'about' && <AboutSection />}
             {activeTab === 'articles' && <ArticlesSection />}
             {activeTab === 'works' && <WorksSection />}
@@ -105,11 +106,87 @@ export default function App() {
           </div>
         </div>
       </footer>
+
+      <AnimatePresence>
+        {showEmailModal && (
+          <EmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
 
-function HomeSection({ setActiveTab }: { setActiveTab: (tab: Tab) => void }) {
+function EmailModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const email = "1146472544@qq.com";
+
+  if (!isOpen) return null;
+
+  const handleCopy = () => {
+    navigator.clipboard.writeText(email);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white border-4 border-black rounded-[32px] p-8 w-full max-w-md shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative"
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center border-2 border-black rounded-full hover:bg-brand-pink transition-colors cursor-pointer"
+        >
+          ✕
+        </button>
+        
+        <div className="text-center mb-8">
+          <div className="w-16 h-16 bg-brand-yellow border-4 border-black rounded-2xl flex items-center justify-center mx-auto mb-4 rotate-3">
+            <Mail size={32} />
+          </div>
+          <h3 className="text-2xl font-black uppercase">联系方式</h3>
+          <p className="text-gray-600 mt-2">选择您喜欢的方式联系我</p>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-gray-50 border-2 border-black rounded-xl">
+            <span className="font-mono font-bold text-lg select-all">{email}</span>
+            <button 
+              onClick={handleCopy}
+              className="bg-white border-2 border-black p-2 rounded-lg hover:bg-brand-blue transition-colors cursor-pointer flex items-center gap-2"
+            >
+              {copied ? <Check size={16} /> : <Copy size={16} />}
+              <span className="text-sm font-bold">{copied ? '已复制' : '复制'}</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-2 gap-4 pt-4">
+            <a 
+              href={`mailto:${email}`}
+              className="bg-[#005FF9] text-white p-4 rounded-xl border-2 border-black font-bold flex flex-col items-center gap-2 hover:-translate-y-1 transition-transform cursor-pointer"
+            >
+              <span>默认邮件客户端</span>
+            </a>
+            <a 
+              href={`https://mail.qq.com/cgi-bin/qm_share?t=qm_mailme&email=${email}`}
+              target="_blank"
+              rel="noreferrer"
+              className="bg-[#FFE100] text-black p-4 rounded-xl border-2 border-black font-bold flex flex-col items-center gap-2 hover:-translate-y-1 transition-transform cursor-pointer"
+            >
+              <span>网页版 QQ 邮箱</span>
+            </a>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
+function HomeSection({ setActiveTab, setShowEmailModal }: { setActiveTab: (tab: Tab) => void, setShowEmailModal: (show: boolean) => void }) {
   return (
     <div className="grid md:grid-cols-2 gap-12 items-center min-h-[70vh]">
       <div className="space-y-8">
@@ -122,12 +199,12 @@ function HomeSection({ setActiveTab }: { setActiveTab: (tab: Tab) => void }) {
           专注于打造独特、有趣且富有表现力的数字体验。擅长前端开发与视觉设计。
         </p>
         <div className="flex flex-wrap gap-4">
-          <a 
-            href="mailto:1146472544@qq.com"
+          <button 
+            onClick={() => setShowEmailModal(true)}
             className="bg-black text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-white hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
           >
             <Mail size={20} /> 联系我
-          </a>
+          </button>
           <button 
             onClick={() => setActiveTab('works')}
             className="bg-white text-black px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-brand-yellow transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
