@@ -40,9 +40,12 @@ export default function App() {
                 </button>
               ))}
             </div>
-            <button className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer ml-2">
+            <a 
+              href="mailto:1146472544@qq.com"
+              className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer ml-2 flex-shrink-0"
+            >
               <Mail size={16} />
-            </button>
+            </a>
           </div>
 
           <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
@@ -59,9 +62,12 @@ export default function App() {
             ))}
           </div>
 
-          <button className="hidden md:block bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer absolute right-6 top-1/2 -translate-y-1/2">
+          <a 
+            href="mailto:1146472544@qq.com"
+            className="hidden md:flex items-center justify-center bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer absolute right-6 top-1/2 -translate-y-1/2"
+          >
             <Mail size={20} />
-          </button>
+          </a>
         </div>
       </nav>
 
@@ -116,9 +122,12 @@ function HomeSection({ setActiveTab }: { setActiveTab: (tab: Tab) => void }) {
           专注于打造独特、有趣且富有表现力的数字体验。擅长前端开发与视觉设计。
         </p>
         <div className="flex flex-wrap gap-4">
-          <button className="bg-black text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-white hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer">
+          <a 
+            href="mailto:1146472544@qq.com"
+            className="bg-black text-white px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-white hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
+          >
             <Mail size={20} /> 联系我
-          </button>
+          </a>
           <button 
             onClick={() => setActiveTab('works')}
             className="bg-white text-black px-8 py-4 rounded-xl font-bold flex items-center gap-2 border-4 border-black hover:bg-brand-yellow transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
