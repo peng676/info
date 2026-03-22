@@ -3,11 +3,100 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle } from 'lucide-react';
+import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle, Play, Pause, SkipForward, Music } from 'lucide-react';
 
 type Tab = 'home' | 'about' | 'articles' | 'works' | 'products';
+
+function MusicPlayer() {
+  const [isPlaying, setIsPlaying] = useState(false);
+  const [currentSongIndex, setCurrentSongIndex] = useState(0);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  const playlist = [
+    { title: "Alive", artist: "Blue", file: "/music/Alive-Blue-7245399-2000.mp3" },
+    { title: "NO BATIDÃO", artist: "ZxKAI", file: "/music/NO_BATIDÃO_(Explicit)-ZxKAI_SLXUGHTER-496943468-2000.mp3" },
+    { title: "超级冠军", artist: "鹿晗", file: "/music/超级冠军-鹿晗-6632534-2000.mp3" },
+    { title: "江南", artist: "林俊杰", file: "/music/江南-林俊杰-93157-2000.mp3" },
+    { title: "弱水三千", artist: "lucky小阳", file: "/music/弱水三千_(lucky小阳_Remix)-lucky小阳-310072876-320.mp3" }
+  ];
+
+  const currentSong = playlist[currentSongIndex];
+
+  useEffect(() => {
+    const audio = document.getElementById('bg-music') as HTMLAudioElement;
+    if (audio) {
+      if (isPlaying) {
+        audio.play().catch(e => console.log("Auto-play prevented", e));
+      } else {
+        audio.pause();
+      }
+    }
+  }, [isPlaying, currentSongIndex]);
+
+  const handleNext = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setCurrentSongIndex((prev) => (prev + 1) % playlist.length);
+    setIsPlaying(true);
+  };
+
+  const togglePlay = (e: React.MouseEvent) => {
+    e.stopPropagation();
+    setIsPlaying(!isPlaying);
+  };
+
+  return (
+    <div className="fixed bottom-6 right-6 z-[90]">
+      <audio 
+        id="bg-music" 
+        src={currentSong.file} 
+        onEnded={() => handleNext({ stopPropagation: () => {} } as any)} 
+      />
+      
+      <motion.div 
+        layout
+        onClick={() => setIsExpanded(!isExpanded)}
+        className={`bg-white border-4 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] flex items-center cursor-pointer overflow-hidden transition-all ${isExpanded ? 'rounded-[24px] p-4 pr-6' : 'rounded-full p-3'}`}
+      >
+        <div className={`w-12 h-12 rounded-full border-2 border-black flex items-center justify-center bg-brand-yellow shrink-0 ${isPlaying ? 'animate-[spin_4s_linear_infinite]' : ''}`}>
+          <Music size={20} className="text-black" />
+        </div>
+        
+        <AnimatePresence>
+          {isExpanded && (
+            <motion.div 
+              initial={{ width: 0, opacity: 0, marginLeft: 0 }}
+              animate={{ width: 'auto', opacity: 1, marginLeft: 16 }}
+              exit={{ width: 0, opacity: 0, marginLeft: 0 }}
+              className="flex items-center gap-4 whitespace-nowrap"
+            >
+              <div className="flex flex-col">
+                <span className="font-black text-sm max-w-[120px] truncate">{currentSong.title}</span>
+                <span className="font-bold text-xs text-gray-500 max-w-[120px] truncate">{currentSong.artist}</span>
+              </div>
+              
+              <div className="flex items-center gap-2 ml-2">
+                <button 
+                  onClick={togglePlay}
+                  className="w-10 h-10 bg-black text-white rounded-full flex items-center justify-center hover:bg-brand-pink transition-colors border-2 border-transparent hover:border-black"
+                >
+                  {isPlaying ? <Pause size={16} /> : <Play size={16} className="ml-1" />}
+                </button>
+                <button 
+                  onClick={handleNext}
+                  className="w-10 h-10 bg-gray-100 text-black rounded-full flex items-center justify-center hover:bg-brand-blue hover:text-white transition-colors border-2 border-black"
+                >
+                  <SkipForward size={16} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </motion.div>
+    </div>
+  );
+}
 
 export default function App() {
   const [activeTab, setActiveTab] = useState<Tab>('home');
@@ -114,6 +203,8 @@ export default function App() {
           <EmailModal isOpen={showEmailModal} onClose={() => setShowEmailModal(false)} />
         )}
       </AnimatePresence>
+
+      <MusicPlayer />
     </div>
   );
 }
