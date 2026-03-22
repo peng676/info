@@ -23,9 +23,28 @@ export default function App() {
     <div className="min-h-screen bg-white selection:bg-brand-yellow selection:text-black">
       {/* Navigation */}
       <nav className="fixed top-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-2xl px-4">
-        <div className="bg-white border-4 border-black rounded-full px-6 py-3 flex items-center justify-between shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative">
+        <div className="bg-white border-4 border-black rounded-full px-4 md:px-6 py-3 flex items-center justify-between shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] relative">
           
           
+          <div className="flex md:hidden items-center justify-between w-full">
+             <div className="flex items-center gap-3">
+              {navItems.map((item) => (
+                <button
+                  key={item.id}
+                  onClick={() => setActiveTab(item.id as Tab)}
+                  className={`font-bold text-xs uppercase tracking-wider transition-colors hover:text-brand-pink cursor-pointer ${
+                    activeTab === item.id ? 'text-brand-pink underline underline-offset-4 decoration-2' : 'text-black'
+                  }`}
+                >
+                  {item.label}
+                </button>
+              ))}
+            </div>
+            <button className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer ml-2">
+              <Mail size={16} />
+            </button>
+          </div>
+
           <div className="hidden md:flex items-center gap-8 absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2">
             {navItems.map((item) => (
               <button
@@ -40,28 +59,13 @@ export default function App() {
             ))}
           </div>
 
-          <button className="bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer">
+          <button className="hidden md:block bg-black text-white p-2 rounded-lg hover:bg-brand-pink transition-colors cursor-pointer absolute right-6 top-1/2 -translate-y-1/2">
             <Mail size={20} />
           </button>
         </div>
       </nav>
 
-      {/* Mobile Nav */}
-      <div className="md:hidden fixed bottom-8 left-1/2 -translate-x-1/2 z-50 w-full max-w-xs px-4">
-        <div className="bg-white border-4 border-black rounded-2xl p-2 flex justify-around shadow-[6px_6px_0px_0px_rgba(0,0,0,1)]">
-          {navItems.map((item) => (
-            <button
-              key={item.id}
-              onClick={() => setActiveTab(item.id as Tab)}
-              className={`p-3 rounded-xl transition-colors cursor-pointer ${
-                activeTab === item.id ? 'bg-brand-yellow text-black border-2 border-black' : 'text-gray-500'
-              }`}
-            >
-              <item.icon size={24} />
-            </button>
-          ))}
-        </div>
-      </div>
+      {/* Mobile Nav - Removed bottom nav since we show it on top now */}
 
       {/* Content */}
       <main className="pt-32 pb-24 px-6 max-w-6xl mx-auto">
@@ -247,15 +251,23 @@ function WorksSection() {
       <div className="grid md:grid-cols-2 gap-12">
         {works.map((work, idx) => (
           <div key={idx} className="group">
-            <div className={`relative border-4 border-black rounded-[32px] overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all group-hover:shadow-none group-hover:translate-x-2 group-hover:translate-y-2`}>
+            <div 
+              className={`relative border-4 border-black rounded-[32px] overflow-hidden shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] transition-all md:group-hover:shadow-none md:group-hover:translate-x-2 md:group-hover:translate-y-2`}
+            >
               <img 
                 src={customImages[idx] ?? work.image} 
                 alt={work.title} 
-                className="w-full aspect-[4/3] object-cover grayscale group-hover:grayscale-0 transition-all duration-500"
+                className="w-full aspect-[4/3] object-cover grayscale md:group-hover:grayscale-0 active:grayscale-0 transition-all duration-500"
                 referrerPolicy="no-referrer"
+                onClick={(e) => {
+                  // On mobile, toggle grayscale on click by temporarily adding a class
+                  const img = e.currentTarget;
+                  img.classList.toggle('grayscale-0');
+                  img.classList.toggle('grayscale');
+                }}
               />
-              <div className="absolute inset-0 bg-black/60 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
-                <label className="bg-white text-black px-6 py-3 rounded-full font-black flex items-center gap-2 cursor-pointer">
+              <div className="absolute inset-0 bg-black/60 opacity-0 md:group-hover:opacity-100 transition-opacity flex items-center justify-center pointer-events-none md:pointer-events-auto">
+                <label className="bg-white text-black px-6 py-3 rounded-full font-black flex items-center gap-2 cursor-pointer pointer-events-auto">
                   更换图片 <ExternalLink size={18} />
                   <input 
                     type="file" 
