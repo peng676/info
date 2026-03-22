@@ -5,7 +5,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart } from 'lucide-react';
+import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle } from 'lucide-react';
 
 type Tab = 'home' | 'about' | 'articles' | 'works' | 'products';
 
@@ -304,7 +304,72 @@ function ArticlesSection() {
   );
 }
 
+function PaymentModal({ isOpen, onClose, product }: { isOpen: boolean; onClose: () => void, product: any }) {
+  if (!isOpen || !product) return null;
+
+  return (
+    <div className="fixed inset-0 z-[100] flex items-center justify-center px-4 bg-black/40 backdrop-blur-sm" onClick={onClose}>
+      <motion.div 
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
+        exit={{ opacity: 0, scale: 0.95 }}
+        onClick={(e) => e.stopPropagation()}
+        className="bg-white border-4 border-black rounded-[32px] p-8 w-full max-w-md shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] relative"
+      >
+        <button 
+          onClick={onClose}
+          className="absolute top-4 right-4 w-8 h-8 flex items-center justify-center border-2 border-black rounded-full hover:bg-brand-pink transition-colors cursor-pointer"
+        >
+          ✕
+        </button>
+        
+        <div className="text-center mb-6">
+          <div className="inline-block bg-brand-yellow px-4 py-1 border-2 border-black rounded-full text-sm font-bold mb-4">
+            人工发货
+          </div>
+          <h3 className="text-2xl font-black mb-2">{product.title}</h3>
+          <p className="text-4xl font-black text-brand-pink">{product.price}</p>
+        </div>
+
+        <div className="bg-gray-50 border-2 border-black rounded-xl p-4 mb-6">
+          <p className="text-sm text-gray-600 font-medium mb-3">由于个人网站限制，请通过以下方式完成购买：</p>
+          <ol className="text-sm font-bold space-y-2 list-decimal list-inside ml-2">
+            <li>添加下方微信</li>
+            <li>转账相应金额并备注您的邮箱</li>
+            <li>我会在 12 小时内将商品发送到您的邮箱</li>
+          </ol>
+        </div>
+
+        <div className="space-y-4">
+          <div className="flex items-center justify-between p-4 bg-white border-2 border-black rounded-xl">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-[#07C160] rounded-lg flex items-center justify-center text-white">
+                <MessageCircle size={20} />
+              </div>
+              <div>
+                <p className="font-bold text-sm text-gray-500">微信号</p>
+                <p className="font-black">y777777ol</p>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                navigator.clipboard.writeText('y777777ol');
+                alert('微信号已复制！');
+              }}
+              className="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold hover:bg-brand-pink transition-colors cursor-pointer"
+            >
+              复制
+            </button>
+          </div>
+        </div>
+      </motion.div>
+    </div>
+  );
+}
+
 function ProductsSection() {
+  const [selectedProduct, setSelectedProduct] = useState<any>(null);
+  
   const products = [
     { id: 1, title: "设计系统模板", price: "¥199", description: "包含 500+ 组件的 Figma 高级设计系统，助你快速搭建企业级应用。", image: "https://picsum.photos/seed/prod1/800/600", tag: "热卖", color: "bg-brand-yellow" },
     { id: 2, title: "前端开发实战课程", price: "¥299", description: "从零开始带你使用 React 和 Tailwind 构建现代化商业网站。", image: "https://picsum.photos/seed/prod2/800/600", tag: "上新", color: "bg-brand-pink" },
@@ -340,7 +405,7 @@ function ProductsSection() {
               <div className="flex items-center justify-between mt-auto pt-4 border-t-2 border-dashed border-gray-200">
                 <span className="text-3xl font-black text-brand-pink">{product.price}</span>
                 <button 
-                  onClick={() => alert('提示：接入真实微信/支付宝支付需要企业资质和商户号。目前为展示效果。')}
+                  onClick={() => setSelectedProduct(product)}
                   className="bg-black text-white px-6 py-3 rounded-xl font-bold hover:bg-brand-yellow hover:text-black border-2 border-transparent hover:border-black transition-colors"
                 >
                   立即购买
@@ -360,6 +425,16 @@ function ProductsSection() {
           获取报价
         </button>
       </div>
+
+      <AnimatePresence>
+        {selectedProduct && (
+          <PaymentModal 
+            isOpen={!!selectedProduct} 
+            onClose={() => setSelectedProduct(null)} 
+            product={selectedProduct} 
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 }
