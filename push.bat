@@ -31,7 +31,7 @@ git remote add origin https://github.com/peng676/info.git
 
 echo.
 echo [6/6] 开始推送到 GitHub (如果弹出登录框，请授权登录)...
-git push -u origin main
+git push -u origin main --force
 
 echo.
 echo =======================================
