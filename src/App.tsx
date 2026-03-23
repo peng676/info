@@ -274,7 +274,7 @@ function HomeSection({ setActiveTab, setShowEmailModal }: { setActiveTab: (tab: 
     <div className="grid md:grid-cols-2 gap-12 items-center min-h-[70vh]">
       <div className="space-y-8">
         <h1 className="text-6xl md:text-8xl font-black leading-tight">
-          我是 <span className="bg-brand-pink text-white px-4 inline-block transform -rotate-1">朔先生</span>,
+          我是 <span className="bg-brand-pink text-white px-4 inline-block transform -rotate-1">王朔</span>,
           <br />
           一名来自 <span className="bg-brand-blue text-white px-4 inline-block transform rotate-1">中国</span> 的网页设计师
         </h1>
@@ -860,8 +860,8 @@ function SiteFooter() {
     <footer className="border-t-4 border-black py-12 px-6 bg-white">
       <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
         <div>
-          <h3 className="font-black text-2xl uppercase italic">朔先生</h3>
-          <p className="text-gray-600 mt-2">© 2026 朔先生. 用心构建.</p>
+          <h3 className="font-black text-2xl uppercase italic">王朔</h3>
+          <p className="text-gray-600 mt-2">© 2026 王朔. 用心构建.</p>
           <div className="flex items-center gap-2 mt-4 text-sm font-bold text-gray-500 bg-gray-100 w-fit px-4 py-2 rounded-full border-2 border-gray-200">
             <Eye size={16} />
             <span>本站已被访问 {visits !== null ? visits : '...'} 次</span>
