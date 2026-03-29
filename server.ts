@@ -16,6 +16,12 @@ fs.mkdirSync(uploadsDir, { recursive: true });
 
 const supabaseUrl = process.env.SUPABASE_URL || '';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || '';
+
+console.log('🔍 调试信息:');
+console.log('- SUPABASE_URL 是否设置:', !!supabaseUrl);
+console.log('- SUPABASE_SERVICE_ROLE_KEY 是否设置:', !!supabaseKey);
+console.log('- URL:', supabaseUrl ? supabaseUrl.substring(0, 30) + '...' : '未设置');
+
 const supabase = createClient(supabaseUrl, supabaseKey);
 
 app.post('/api/upload/works/:idx', (req, res) => {
@@ -54,15 +60,13 @@ app.get('/api/ping', (_req, res) => {
 
 app.get('/api/messages', async (_req, res) => {
   try {
-    const { data, error } = await supabase
-      .from('messages')
-      .select('id, name, content, created_at')
-      .order('created_at_full', { ascending: false });
-
-    if (error) {
-      console.error('Error fetching messages:', error);
+    console.log('📥 收到获取留言请求');
+    
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ 环境变量未设置');
       return res.json({ 
         ok: false, 
+        error: '环境变量未设置',
         fallback: [
           { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
           { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
@@ -70,11 +74,30 @@ app.get('/api/messages', async (_req, res) => {
       });
     }
 
+    const { data, error } = await supabase
+      .from('messages')
+      .select('id, name, content, created_at')
+      .order('created_at_full', { ascending: false });
+
+    if (error) {
+      console.error('❌ Supabase 查询错误:', error);
+      return res.json({ 
+        ok: false, 
+        error: error.message,
+        fallback: [
+          { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
+          { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
+        ]
+      });
+    }
+
+    console.log('✅ 查询成功，返回', data?.length, '条留言');
     res.json({ ok: true, data });
   } catch (error) {
-    console.error('Error fetching messages:', error);
+    console.error('❌ 获取留言异常:', error);
     res.json({ 
       ok: false, 
+      error: error instanceof Error ? error.message : '未知错误',
       fallback: [
         { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
         { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
