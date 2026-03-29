@@ -15,8 +15,11 @@ const uploadsDir = path.join(root, 'public', 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
 
 let db: mysql.Connection | null = null;
+let dbInitialized = false;
 
 async function initDatabase() {
+  if (dbInitialized) return;
+  
   try {
     const tempDb = await mysql.createConnection({
       host: process.env.MYSQL_HOST || 'localhost',
@@ -60,13 +63,13 @@ async function initDatabase() {
       `);
       console.log('✅ 初始化留言数据成功');
     }
+    
+    dbInitialized = true;
   } catch (error) {
     console.error('❌ MySQL数据库连接失败:', error);
     db = null;
   }
 }
-
-initDatabase();
 
 app.post('/api/upload/works/:idx', (req, res) => {
   try {
@@ -104,22 +107,40 @@ app.get('/api/ping', (_req, res) => {
 
 app.get('/api/messages', async (_req, res) => {
   try {
+    await initDatabase();
+    
     if (!db) {
-      return res.status(500).json({ ok: false, error: 'Database not connected' });
+      return res.json({ 
+        ok: false, 
+        fallback: [
+          { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
+          { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
+        ]
+      });
     }
+    
     const [rows] = await db.execute('SELECT id, name, content, created_at FROM messages ORDER BY created_at_full DESC');
     res.json({ ok: true, data: rows });
   } catch (error) {
     console.error('Error fetching messages:', error);
-    res.status(500).json({ ok: false, error: 'Failed to fetch messages' });
+    res.json({ 
+      ok: false, 
+      fallback: [
+        { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
+        { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
+      ]
+    });
   }
 });
 
 app.post('/api/messages', async (req, res) => {
   try {
+    await initDatabase();
+    
     if (!db) {
       return res.status(500).json({ ok: false, error: 'Database not connected' });
     }
+    
     const { name, content } = req.body;
     
     if (!name || !name.trim() || !content || !content.trim()) {
@@ -148,6 +169,11 @@ app.post('/api/messages', async (req, res) => {
 app.use('/uploads', express.static(uploadsDir));
 
 const port = Number(process.env.PORT || 3002);
-app.listen(port, () => {
-  console.log(`Upload server listening on http://localhost:${port}`);
-});
+
+if (process.env.NODE_ENV !== 'production' && process.env.VERCEL !== '1') {
+  app.listen(port, () => {
+    console.log(`Upload server listening on http://localhost:${port}`);
+  });
+}
+
+export default app;
