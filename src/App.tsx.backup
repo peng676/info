@@ -3,9 +3,10 @@
  * SPDX-License-Identifier: Apache-2.0
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle, Play, Pause, SkipForward, Music, Maximize2, X, Eye, MessageSquare, FileAudio, Upload, Download, RefreshCw } from 'lucide-react';
+import { Mail, Briefcase, FileText, User, Home as HomeIcon, Github, Twitter, Linkedin, ExternalLink, Copy, Check, ShoppingBag, ShoppingCart, MessageCircle, Play, Pause, SkipForward, Music, Maximize2, X, Eye, MessageSquare, Upload, Download, RefreshCw, FileAudio } from 'lucide-react';
+import { convertFlacToMp3 } from './utils/ffmpeg';
 
 type Tab = 'home' | 'about' | 'articles' | 'works' | 'products' | 'guestbook' | 'tools';
 
@@ -108,8 +109,8 @@ export default function App() {
     { id: 'articles', label: '我的文章', icon: FileText },
     { id: 'works', label: '我的作品', icon: Briefcase },
     { id: 'products', label: '商品', icon: ShoppingBag },
-    { id: 'guestbook', label: '留言', icon: MessageSquare },
     { id: 'tools', label: '工具', icon: FileAudio },
+    { id: 'guestbook', label: '留言', icon: MessageSquare },
   ];
 
   return (
@@ -181,8 +182,8 @@ export default function App() {
             {activeTab === 'articles' && <ArticlesSection />}
             {activeTab === 'works' && <WorksSection />}
             {activeTab === 'products' && <ProductsSection />}
-            {activeTab === 'guestbook' && <GuestbookSection />}
             {activeTab === 'tools' && <ToolsSection />}
+            {activeTab === 'guestbook' && <GuestbookSection />}
           </motion.div>
         </AnimatePresence>
       </main>
@@ -324,6 +325,202 @@ function HomeSection({ setActiveTab, setShowEmailModal }: { setActiveTab: (tab: 
   );
 }
 
+function ToolsSection() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [converting, setConverting] = useState<number | null>(null);
+  const [progress, setProgress] = useState<{ [key: number]: number }>({});
+  const [convertedFiles, setConvertedFiles] = useState<{ [key: number]: File }>({});
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const flacFiles = selectedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const flacFiles = droppedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setConvertedFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[index];
+      return newFiles;
+    });
+    setProgress(prev => {
+      const newProgress = { ...prev };
+      delete newProgress[index];
+      return newProgress;
+    });
+  };
+
+  const convertFile = async (index: number) => {
+    setConverting(index);
+    setProgress({ ...progress, [index]: 0 });
+    setLoading(true);
+
+    try {
+      const file = files[index];
+      const converted = await convertFlacToMp3(file, (p) => {
+        setProgress(prev => ({ ...prev, [index]: p }));
+      });
+      setConvertedFiles(prev => ({ ...prev, [index]: converted }));
+    } catch (error) {
+      console.error('转换失败:', error);
+      alert('转换失败，请重试');
+    } finally {
+      setConverting(null);
+      setLoading(false);
+    }
+  };
+
+  const downloadFile = (index: number) => {
+    const file = convertedFiles[index];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  return (
+    <div className="space-y-12 py-12">
+      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-blue decoration-8 underline-offset-8">音频转换工具</h2>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div 
+            className="border-4 border-dashed border-black rounded-[32px] p-12 bg-gray-50 hover:bg-brand-yellow/20 transition-colors cursor-pointer"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input 
+              type="file" 
+              accept=".flac" 
+              multiple 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+            />
+            <div className="text-center space-y-4">
+              <Upload size={64} className="mx-auto text-black" />
+              <div className="space-y-2">
+                <p className="text-2xl font-black">拖拽或点击上传</p>
+                <p className="text-gray-600 font-bold">支持 .flac 文件</p>
+              </div>
+            </div>
+          </div>
+
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-2xl font-black uppercase">待转换文件</h3>
+              {files.map((file, index) => (
+                <div key={index} className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <FileAudio size={24} className="text-brand-pink" />
+                      <div>
+                        <p className="font-black truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-sm font-bold text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="w-10 h-10 border-2 border-black rounded-full flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {converting === index ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>正在转换...</span>
+                        <span>{progress[index]}%</span>
+                      </div>
+                      <div className="h-4 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-brand-blue"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress[index]}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : convertedFiles[index] ? (
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-green-600 flex items-center gap-2">
+                        <Check size={20} /> 转换成功
+                      </span>
+                      <button 
+                        onClick={() => downloadFile(index)}
+                        className="bg-black text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-yellow hover:text-black transition-colors"
+                      >
+                        <Download size={16} /> 下载
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => convertFile(index)}
+                      disabled={loading}
+                      className="w-full bg-black text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-brand-pink transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> 开始转换
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-brand-yellow/20 border-4 border-black rounded-[32px] p-8">
+          <h3 className="text-3xl font-black mb-6 uppercase">FLAC 转 MP3</h3>
+          <div className="space-y-4">
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">使用说明</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 上传您的 FLAC 音频文件</li>
+                <li>• 点击开始转换按钮</li>
+                <li>• 等待转换完成</li>
+                <li>• 下载转换好的 MP3 文件</li>
+              </ul>
+            </div>
+
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">特点</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 纯前端转换，保护隐私</li>
+                <li>• 文件不上传服务器</li>
+                <li>• 高质量 MP3 输出</li>
+                <li>• 支持批量转换</li>
+              </ul>
+            </div>
+
+            <div className="bg-brand-blue text-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">注意事项</h4>
+              <ul className="space-y-2 text-sm font-bold">
+                <li>• 首次使用需要加载 FFmpeg 引擎</li>
+                <li>• 大文件转换可能需要较长时间</li>
+                <li>• 建议单个文件不超过 100MB</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function AboutSection() {
   return (
     <div className="space-y-16 py-12">
@@ -346,6 +543,202 @@ function AboutSection() {
           <TimelineItem year="2024 - 至今" role="高级设计师" company="创意数字机构" />
           <TimelineItem year="2021 - 2024" role="产品设计师" company="科技初创公司" />
           <TimelineItem year="2018 - 2021" role="初级设计师" company="独立设计工作室" />
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function ToolsSection() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [converting, setConverting] = useState<number | null>(null);
+  const [progress, setProgress] = useState<{ [key: number]: number }>({});
+  const [convertedFiles, setConvertedFiles] = useState<{ [key: number]: File }>({});
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const flacFiles = selectedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const flacFiles = droppedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setConvertedFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[index];
+      return newFiles;
+    });
+    setProgress(prev => {
+      const newProgress = { ...prev };
+      delete newProgress[index];
+      return newProgress;
+    });
+  };
+
+  const convertFile = async (index: number) => {
+    setConverting(index);
+    setProgress({ ...progress, [index]: 0 });
+    setLoading(true);
+
+    try {
+      const file = files[index];
+      const converted = await convertFlacToMp3(file, (p) => {
+        setProgress(prev => ({ ...prev, [index]: p }));
+      });
+      setConvertedFiles(prev => ({ ...prev, [index]: converted }));
+    } catch (error) {
+      console.error('转换失败:', error);
+      alert('转换失败，请重试');
+    } finally {
+      setConverting(null);
+      setLoading(false);
+    }
+  };
+
+  const downloadFile = (index: number) => {
+    const file = convertedFiles[index];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  return (
+    <div className="space-y-12 py-12">
+      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-blue decoration-8 underline-offset-8">音频转换工具</h2>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div 
+            className="border-4 border-dashed border-black rounded-[32px] p-12 bg-gray-50 hover:bg-brand-yellow/20 transition-colors cursor-pointer"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input 
+              type="file" 
+              accept=".flac" 
+              multiple 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+            />
+            <div className="text-center space-y-4">
+              <Upload size={64} className="mx-auto text-black" />
+              <div className="space-y-2">
+                <p className="text-2xl font-black">拖拽或点击上传</p>
+                <p className="text-gray-600 font-bold">支持 .flac 文件</p>
+              </div>
+            </div>
+          </div>
+
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-2xl font-black uppercase">待转换文件</h3>
+              {files.map((file, index) => (
+                <div key={index} className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <FileAudio size={24} className="text-brand-pink" />
+                      <div>
+                        <p className="font-black truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-sm font-bold text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="w-10 h-10 border-2 border-black rounded-full flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {converting === index ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>正在转换...</span>
+                        <span>{progress[index]}%</span>
+                      </div>
+                      <div className="h-4 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-brand-blue"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress[index]}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : convertedFiles[index] ? (
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-green-600 flex items-center gap-2">
+                        <Check size={20} /> 转换成功
+                      </span>
+                      <button 
+                        onClick={() => downloadFile(index)}
+                        className="bg-black text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-yellow hover:text-black transition-colors"
+                      >
+                        <Download size={16} /> 下载
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => convertFile(index)}
+                      disabled={loading}
+                      className="w-full bg-black text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-brand-pink transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> 开始转换
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-brand-yellow/20 border-4 border-black rounded-[32px] p-8">
+          <h3 className="text-3xl font-black mb-6 uppercase">FLAC 转 MP3</h3>
+          <div className="space-y-4">
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">使用说明</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 上传您的 FLAC 音频文件</li>
+                <li>• 点击开始转换按钮</li>
+                <li>• 等待转换完成</li>
+                <li>• 下载转换好的 MP3 文件</li>
+              </ul>
+            </div>
+
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">特点</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 纯前端转换，保护隐私</li>
+                <li>• 文件不上传服务器</li>
+                <li>• 高质量 MP3 输出</li>
+                <li>• 支持批量转换</li>
+              </ul>
+            </div>
+
+            <div className="bg-brand-blue text-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">注意事项</h4>
+              <ul className="space-y-2 text-sm font-bold">
+                <li>• 首次使用需要加载 FFmpeg 引擎</li>
+                <li>• 大文件转换可能需要较长时间</li>
+                <li>• 建议单个文件不超过 100MB</li>
+              </ul>
+            </div>
+          </div>
         </div>
       </div>
     </div>
@@ -847,6 +1240,202 @@ function TimelineItem({ year, role, company }: { year: string; role: string; com
   );
 }
 
+function ToolsSection() {
+  const [files, setFiles] = useState<File[]>([]);
+  const [converting, setConverting] = useState<number | null>(null);
+  const [progress, setProgress] = useState<{ [key: number]: number }>({});
+  const [convertedFiles, setConvertedFiles] = useState<{ [key: number]: File }>({});
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const flacFiles = selectedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
+  };
+
+  const handleDrop = (e: React.DragEvent) => {
+    e.preventDefault();
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const flacFiles = droppedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
+  };
+
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setConvertedFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[index];
+      return newFiles;
+    });
+    setProgress(prev => {
+      const newProgress = { ...prev };
+      delete newProgress[index];
+      return newProgress;
+    });
+  };
+
+  const convertFile = async (index: number) => {
+    setConverting(index);
+    setProgress({ ...progress, [index]: 0 });
+    setLoading(true);
+
+    try {
+      const file = files[index];
+      const converted = await convertFlacToMp3(file, (p) => {
+        setProgress(prev => ({ ...prev, [index]: p }));
+      });
+      setConvertedFiles(prev => ({ ...prev, [index]: converted }));
+    } catch (error) {
+      console.error('转换失败:', error);
+      alert('转换失败，请重试');
+    } finally {
+      setConverting(null);
+      setLoading(false);
+    }
+  };
+
+  const downloadFile = (index: number) => {
+    const file = convertedFiles[index];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+  };
+
+  return (
+    <div className="space-y-12 py-12">
+      <h2 className="text-5xl font-black uppercase italic underline decoration-brand-blue decoration-8 underline-offset-8">音频转换工具</h2>
+      
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div 
+            className="border-4 border-dashed border-black rounded-[32px] p-12 bg-gray-50 hover:bg-brand-yellow/20 transition-colors cursor-pointer"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input 
+              type="file" 
+              accept=".flac" 
+              multiple 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+            />
+            <div className="text-center space-y-4">
+              <Upload size={64} className="mx-auto text-black" />
+              <div className="space-y-2">
+                <p className="text-2xl font-black">拖拽或点击上传</p>
+                <p className="text-gray-600 font-bold">支持 .flac 文件</p>
+              </div>
+            </div>
+          </div>
+
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-2xl font-black uppercase">待转换文件</h3>
+              {files.map((file, index) => (
+                <div key={index} className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <FileAudio size={24} className="text-brand-pink" />
+                      <div>
+                        <p className="font-black truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-sm font-bold text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="w-10 h-10 border-2 border-black rounded-full flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
+                    >
+                      ✕
+                    </button>
+                  </div>
+
+                  {converting === index ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>正在转换...</span>
+                        <span>{progress[index]}%</span>
+                      </div>
+                      <div className="h-4 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-brand-blue"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress[index]}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : convertedFiles[index] ? (
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-green-600 flex items-center gap-2">
+                        <Check size={20} /> 转换成功
+                      </span>
+                      <button 
+                        onClick={() => downloadFile(index)}
+                        className="bg-black text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-yellow hover:text-black transition-colors"
+                      >
+                        <Download size={16} /> 下载
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => convertFile(index)}
+                      disabled={loading}
+                      className="w-full bg-black text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-brand-pink transition-colors disabled:opacity-50"
+                    >
+                      <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> 开始转换
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+
+        <div className="bg-brand-yellow/20 border-4 border-black rounded-[32px] p-8">
+          <h3 className="text-3xl font-black mb-6 uppercase">FLAC 转 MP3</h3>
+          <div className="space-y-4">
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">使用说明</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 上传您的 FLAC 音频文件</li>
+                <li>• 点击开始转换按钮</li>
+                <li>• 等待转换完成</li>
+                <li>• 下载转换好的 MP3 文件</li>
+              </ul>
+            </div>
+
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">特点</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 纯前端转换，保护隐私</li>
+                <li>• 文件不上传服务器</li>
+                <li>• 高质量 MP3 输出</li>
+                <li>• 支持批量转换</li>
+              </ul>
+            </div>
+
+            <div className="bg-brand-blue text-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">注意事项</h4>
+              <ul className="space-y-2 text-sm font-bold">
+                <li>• 首次使用需要加载 FFmpeg 引擎</li>
+                <li>• 大文件转换可能需要较长时间</li>
+                <li>• 建议单个文件不超过 100MB</li>
+              </ul>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 function SiteFooter() {
   const [visits, setVisits] = useState<number | null>(null);
 
@@ -887,68 +1476,39 @@ function SocialButton({ icon: Icon }: { icon: any }) {
   );
 }
 function GuestbookSection() {
-    const [messages, setMessages] = useState<{id: number, name: string, content: string, created_at: string}[]>([]);
+    const [messages, setMessages] = useState<{id: number, name: string, content: string, date: string}[]>([]);
   const [name, setName] = useState('');
   const [content, setContent] = useState('');
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [error, setError] = useState('');
 
   useEffect(() => {
-    fetchMessages();
-  }, []);
-
-  const fetchMessages = async () => {
-    try {
-      const res = await fetch('/api/messages');
-      const data = await res.json();
-      if (data.ok) {
-        setMessages(data.data);
-      } else {
-        setError('加载留言失败，使用本地数据');
-        setMessages([
-          { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
-          { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
-        ]);
-      }
-    } catch (err) {
-      console.error('Failed to fetch messages:', err);
-      setError('网络错误，使用本地数据');
+    // 真实项目中这里会 fetch 后端数据库，现在我们用 localStorage 模拟并预设两条数据
+    const saved = localStorage.getItem('shuo_guestbook');
+    if (saved) {
+      setMessages(JSON.parse(saved));
+    } else {
       setMessages([
-        { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", created_at: "2026-03-21" },
-        { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", created_at: "2026-03-22" }
+        { id: 1, name: "设计同行", content: "喜欢这种粗野主义的风格，排版很大胆，学习了！", date: "2026-03-21" },
+        { id: 2, name: "访客A", content: "网站设计得很酷，音乐也很好听~", date: "2026-03-22" }
       ]);
     }
-  };
+  }, []);
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!name.trim() || !content.trim()) return;
     
-    setIsSubmitting(true);
-    setError('');
+    const newMsg = {
+      id: Date.now(),
+      name: name.trim(),
+      content: content.trim(),
+      date: new Date().toISOString().split('T')[0]
+    };
     
-    try {
-      const res = await fetch('/api/messages', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name, content }),
-      });
-      
-      const data = await res.json();
-      
-      if (data.ok) {
-        setMessages([data.data, ...messages]);
-        setName('');
-        setContent('');
-      } else {
-        setError(data.error || '提交失败，请重试');
-      }
-    } catch (err) {
-      console.error('Failed to submit message:', err);
-      setError('网络错误，请确保后端服务器正在运行');
-    } finally {
-      setIsSubmitting(false);
-    }
+    const updated = [newMsg, ...messages];
+    setMessages(updated);
+    localStorage.setItem('shuo_guestbook', JSON.stringify(updated));
+    setName('');
+    setContent('');
   };
 
   return (
@@ -980,18 +1540,12 @@ function GuestbookSection() {
               required
             />
           </div>
-          {error && (
-            <div className="p-4 bg-brand-pink text-white rounded-xl border-2 border-black font-bold">
-              {error}
-            </div>
-          )}
           <button 
             type="submit"
-            disabled={isSubmitting}
-            className="bg-black text-white px-8 py-4 rounded-xl font-bold border-4 border-black hover:bg-brand-yellow hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer flex items-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+            className="bg-black text-white px-8 py-4 rounded-xl font-bold border-4 border-black hover:bg-brand-yellow hover:text-black transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer flex items-center gap-2"
           >
             <MessageSquare size={20} />
-            {isSubmitting ? '提交中...' : '发表留言'}
+            发表留言
           </button>
         </form>
       </div>
@@ -1005,7 +1559,7 @@ function GuestbookSection() {
                 <User size={20} className="text-brand-pink" />
                 {msg.name}
               </span>
-              <span className="text-sm font-bold text-gray-500 border-2 border-gray-200 px-3 py-1 rounded-full">{msg.created_at}</span>
+              <span className="text-sm font-bold text-gray-500 border-2 border-gray-200 px-3 py-1 rounded-full">{msg.date}</span>
             </div>
             <p className="font-medium text-gray-700 text-lg leading-relaxed">{msg.content}</p>
           </div>
@@ -1016,339 +1570,194 @@ function GuestbookSection() {
 }
 
 function ToolsSection() {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [isConverting, setIsConverting] = useState(false);
-  const [progress, setProgress] = useState(0);
-  const [status, setStatus] = useState('');
-  const [outputUrl, setOutputUrl] = useState<string | null>(null);
-  const [ffmpegLoaded, setFfmpegLoaded] = useState(false);
-  const [ffmpeg, setFfmpeg] = useState<any>(null);
-  const [loadError, setLoadError] = useState(false);
-  const [loadingStep, setLoadingStep] = useState('准备中...');
+  const [files, setFiles] = useState<File[]>([]);
+  const [converting, setConverting] = useState<number | null>(null);
+  const [progress, setProgress] = useState<{ [key: number]: number }>({});
+  const [convertedFiles, setConvertedFiles] = useState<{ [key: number]: File }>({});
+  const [loading, setLoading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
-    let isMounted = true;
-    let retryCount = 0;
-    const maxRetries = 2;
-    
-    const loadFfmpeg = async () => {
-      try {
-        setLoadingStep('正在导入FFmpeg库...');
-        const { FFmpeg } = await import('@ffmpeg/ffmpeg');
-        const { fetchFile, toBlobURL } = await import('@ffmpeg/util');
-        const ffmpegInstance = new FFmpeg();
-        
-        ffmpegInstance.on('log', ({ message }: any) => {
-          console.log('[FFmpeg]', message);
-        });
-        
-        ffmpegInstance.on('progress', ({ progress: p }: any) => {
-          if (isMounted) {
-            setProgress(Math.round(p * 100));
-          }
-        });
-
-        setLoadingStep('正在加载核心文件（这可能需要一些时间，请耐心等待）...');
-        
-        const cdns = [
-          'https://cdn.jsdelivr.net/npm/@ffmpeg/core@0.12.6/dist/umd',
-          'https://unpkg.com/@ffmpeg/core@0.12.6/dist/umd'
-        ];
-
-        let loaded = false;
-        
-        for (let attempt = 0; attempt <= maxRetries && !loaded; attempt++) {
-          if (attempt > 0) {
-            setLoadingStep(`重试加载中... (${attempt}/${maxRetries})`);
-            await new Promise(r => setTimeout(r, 1000));
-          }
-          
-          for (const baseURL of cdns) {
-            try {
-              console.log(`[Attempt ${attempt + 1}] Trying CDN:`, baseURL);
-              await ffmpegInstance.load({
-                coreURL: await toBlobURL(`${baseURL}/ffmpeg-core.js`, 'text/javascript'),
-                wasmURL: await toBlobURL(`${baseURL}/ffmpeg-core.wasm`, 'application/wasm'),
-              });
-              loaded = true;
-              console.log('FFmpeg loaded successfully!');
-              break;
-            } catch (cdnError) {
-              console.log('CDN failed:', cdnError);
-              continue;
-            }
-          }
-        }
-
-        if (!loaded) {
-          throw new Error('所有CDN都无法加载');
-        }
-        
-        if (isMounted) {
-          setFfmpeg(ffmpegInstance);
-          setFfmpegLoaded(true);
-          setStatus('');
-        }
-      } catch (error) {
-        console.error('Failed to load FFmpeg:', error);
-        if (isMounted) {
-          setLoadError(true);
-          setStatus('加载转换引擎失败。可能是网络问题，请：\n1. 检查网络连接\n2. 刷新页面重试\n3. 使用Chrome/Edge浏览器\n4. 确保网络可以访问 cdn.jsdelivr.net');
-        }
-      }
-    };
-
-    loadFfmpeg();
-    
-    return () => {
-      isMounted = false;
-    };
-  }, []);
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      if (file.name.toLowerCase().endsWith('.flac')) {
-        setSelectedFile(file);
-        setOutputUrl(null);
-        setStatus('');
-        setProgress(0);
-      } else {
-        setStatus('请选择FLAC格式的文件');
-      }
-    }
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFiles = Array.from(e.target.files || []);
+    const flacFiles = selectedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
   };
 
   const handleDrop = (e: React.DragEvent) => {
     e.preventDefault();
-    const file = e.dataTransfer.files?.[0];
-    if (file) {
-      if (file.name.toLowerCase().endsWith('.flac')) {
-        setSelectedFile(file);
-        setOutputUrl(null);
-        setStatus('');
-        setProgress(0);
-      } else {
-        setStatus('请选择FLAC格式的文件');
-      }
-    }
+    const droppedFiles = Array.from(e.dataTransfer.files);
+    const flacFiles = droppedFiles.filter(f => f.name.toLowerCase().endsWith('.flac'));
+    setFiles(prev => [...prev, ...flacFiles]);
   };
 
-  const handleConvert = async () => {
-    if (!selectedFile || !ffmpeg) return;
+  const removeFile = (index: number) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setConvertedFiles(prev => {
+      const newFiles = { ...prev };
+      delete newFiles[index];
+      return newFiles;
+    });
+    setProgress(prev => {
+      const newProgress = { ...prev };
+      delete newProgress[index];
+      return newProgress;
+    });
+  };
 
-    setIsConverting(true);
-    setStatus('正在转换...');
-    setProgress(0);
+  const convertFile = async (index: number) => {
+    setConverting(index);
+    setProgress({ ...progress, [index]: 0 });
+    setLoading(true);
 
     try {
-      const { fetchFile } = await import('@ffmpeg/util');
-      
-      await ffmpeg.writeFile('input.flac', await fetchFile(selectedFile));
-      
-      await ffmpeg.exec(['-i', 'input.flac', '-codec:a', 'libmp3lame', '-q:a', '2', 'output.mp3']);
-      
-      const data = await ffmpeg.readFile('output.mp3');
-      const url = URL.createObjectURL(new Blob([data.buffer], { type: 'audio/mp3' }));
-      
-      setOutputUrl(url);
-      setStatus('转换成功！');
+      const file = files[index];
+      const converted = await convertFlacToMp3(file, (p) => {
+        setProgress(prev => ({ ...prev, [index]: p }));
+      });
+      setConvertedFiles(prev => ({ ...prev, [index]: converted }));
     } catch (error) {
-      console.error('Conversion failed:', error);
-      setStatus('转换失败，请重试');
+      console.error('转换失败:', error);
+      alert('转换失败，请重试');
     } finally {
-      setIsConverting(false);
+      setConverting(null);
+      setLoading(false);
     }
   };
 
-  const handleDownload = () => {
-    if (!outputUrl || !selectedFile) return;
-    
-    const a = document.createElement('a');
-    a.href = outputUrl;
-    a.download = selectedFile.name.replace('.flac', '.mp3');
-    a.click();
-  };
-
-  const handleReset = () => {
-    setSelectedFile(null);
-    setOutputUrl(null);
-    setStatus('');
-    setProgress(0);
+  const downloadFile = (index: number) => {
+    const file = convertedFiles[index];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = file.name;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
   };
 
   return (
     <div className="space-y-12 py-12">
       <h2 className="text-5xl font-black uppercase italic underline decoration-brand-blue decoration-8 underline-offset-8">音频转换工具</h2>
       
-      <div className="bg-white border-4 border-black p-8 rounded-[32px] shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
-        <div className="space-y-8">
-          <div className="text-center mb-8">
-            <h3 className="text-3xl font-black mb-4">FLAC 转 MP3</h3>
-            <p className="text-gray-600">免费、快速的音频格式转换工具，完全在您的浏览器中运行，数据不上传服务器</p>
+      <div className="grid md:grid-cols-2 gap-8">
+        <div className="space-y-6">
+          <div 
+            className="border-4 border-dashed border-black rounded-[32px] p-12 bg-gray-50 hover:bg-brand-yellow/20 transition-colors cursor-pointer"
+            onDrop={handleDrop}
+            onDragOver={(e) => e.preventDefault()}
+            onClick={() => fileInputRef.current?.click()}
+          >
+            <input 
+              type="file" 
+              accept=".flac" 
+              multiple 
+              className="hidden" 
+              ref={fileInputRef}
+              onChange={handleFileSelect}
+            />
+            <div className="text-center space-y-4">
+              <Upload size={64} className="mx-auto text-black" />
+              <div className="space-y-2">
+                <p className="text-2xl font-black">拖拽或点击上传</p>
+                <p className="text-gray-600 font-bold">支持 .flac 文件</p>
+              </div>
+            </div>
           </div>
 
-          {!ffmpegLoaded && !loadError && (
-            <div className="text-center py-12 space-y-4">
-              <RefreshCw size={48} className="mx-auto animate-spin text-brand-pink" />
-              <p className="text-xl font-bold">{loadingStep}</p>
-              <p className="text-gray-500 text-sm">
-                首次加载需要下载约25MB的转换引擎文件，请耐心等待...
-              </p>
-              <div className="w-full max-w-md mx-auto">
-                <div className="h-2 bg-gray-200 rounded-full overflow-hidden border-2 border-black">
-                  <motion.div
-                    className="h-full bg-brand-pink"
-                    animate={{
-                      x: ['0%', '75%', '0%'],
-                    }}
-                    transition={{
-                      duration: 2,
-                      repeat: Infinity,
-                      ease: 'easeInOut',
-                    }}
-                    style={{ width: '25%' }}
-                  />
-                </div>
-              </div>
-            </div>
-          )}
-
-          {loadError && (
-            <div className="text-center py-12 space-y-6">
-              <div className="w-16 h-16 bg-brand-pink rounded-full border-4 border-black flex items-center justify-center mx-auto">
-                <X size={32} className="text-white" />
-              </div>
-              <div className="space-y-2">
-                <p className="text-xl font-bold">加载失败</p>
-                <p className="text-gray-600 whitespace-pre-line">{status}</p>
-              </div>
-              <button
-                onClick={() => window.location.reload()}
-                className="bg-black text-white px-8 py-4 rounded-xl font-bold border-4 border-black hover:bg-brand-blue transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
-              >
-                刷新重试
-              </button>
-            </div>
-          )}
-
-          {ffmpegLoaded && !selectedFile && (
-            <div
-              onDragOver={(e) => e.preventDefault()}
-              onDrop={handleDrop}
-              className="border-4 border-dashed border-black rounded-2xl p-12 text-center cursor-pointer hover:bg-gray-50 transition-colors"
-            >
-              <input
-                type="file"
-                accept=".flac"
-                onChange={handleFileChange}
-                className="hidden"
-                id="file-upload"
-              />
-              <label htmlFor="file-upload" className="cursor-pointer">
-                <Upload size={64} className="mx-auto mb-4 text-brand-pink" />
-                <p className="text-xl font-bold mb-2">点击或拖拽上传FLAC文件</p>
-                <p className="text-gray-500">支持FLAC格式，最大50MB</p>
-              </label>
-            </div>
-          )}
-
-          {selectedFile && (
-            <div className="space-y-6">
-              <div className="flex items-center justify-between p-6 bg-gray-50 border-2 border-black rounded-xl">
-                <div className="flex items-center gap-4">
-                  <FileAudio size={40} className="text-brand-blue" />
-                  <div>
-                    <p className="font-black text-lg">{selectedFile.name}</p>
-                    <p className="text-gray-500 text-sm">{(selectedFile.size / 1024 / 1024).toFixed(2)} MB</p>
-                  </div>
-                </div>
-                <button
-                  onClick={handleReset}
-                  className="bg-white border-2 border-black p-2 rounded-lg hover:bg-brand-pink hover:text-white transition-colors"
-                >
-                  <X size={20} />
-                </button>
-              </div>
-
-              {isConverting && (
-                <div className="space-y-4">
-                  <div className="flex items-center justify-between">
-                    <span className="font-bold">转换进度</span>
-                    <span className="font-black text-brand-pink">{progress}%</span>
-                  </div>
-                  <div className="h-4 bg-gray-200 rounded-full border-2 border-black overflow-hidden">
-                    <motion.div
-                      className="h-full bg-brand-pink"
-                      initial={{ width: 0 }}
-                      animate={{ width: `${progress}%` }}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {status && (
-                <div className={`p-4 rounded-xl border-2 border-black font-bold ${
-                  status.includes('成功') ? 'bg-brand-yellow' : 
-                  status.includes('失败') || status.includes('请选择') ? 'bg-brand-pink text-white' : 'bg-gray-100'
-                }`}>
-                  {status}
-                </div>
-              )}
-
-              <div className="flex gap-4">
-                {!outputUrl && (
-                  <button
-                    onClick={handleConvert}
-                    disabled={isConverting}
-                    className="flex-1 bg-black text-white px-8 py-4 rounded-xl font-bold border-4 border-black hover:bg-brand-blue transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-                  >
-                    {isConverting ? (
-                      <>
-                        <RefreshCw size={20} className="animate-spin" />
-                        转换中...
-                      </>
-                    ) : (
-                      <>
-                        <RefreshCw size={20} />
-                        开始转换
-                      </>
-                    )}
-                  </button>
-                )}
-
-                {outputUrl && (
-                  <>
-                    <button
-                      onClick={handleDownload}
-                      className="flex-1 bg-brand-yellow text-black px-8 py-4 rounded-xl font-bold border-4 border-black hover:bg-brand-blue hover:text-white transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer flex items-center justify-center gap-2"
+          {files.length > 0 && (
+            <div className="space-y-4">
+              <h3 className="text-2xl font-black uppercase">待转换文件</h3>
+              {files.map((file, index) => (
+                <div key={index} className="bg-white border-4 border-black rounded-2xl p-6 shadow-[8px_8px_0px_0px_rgba(0,0,0,1)]">
+                  <div className="flex items-center justify-between mb-4">
+                    <div className="flex items-center gap-3">
+                      <FileAudio size={24} className="text-brand-pink" />
+                      <div>
+                        <p className="font-black truncate max-w-[200px]">{file.name}</p>
+                        <p className="text-sm font-bold text-gray-500">{(file.size / 1024 / 1024).toFixed(2)} MB</p>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={() => removeFile(index)}
+                      className="w-10 h-10 border-2 border-black rounded-full flex items-center justify-center hover:bg-brand-pink hover:text-white transition-colors"
                     >
-                      <Download size={20} />
-                      下载MP3
+                      ✕
                     </button>
-                    <button
-                      onClick={handleReset}
-                      className="px-8 py-4 rounded-xl font-bold border-4 border-black bg-white hover:bg-gray-100 transition-all shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer"
+                  </div>
+
+                  {converting === index ? (
+                    <div className="space-y-2">
+                      <div className="flex justify-between text-sm font-bold">
+                        <span>正在转换...</span>
+                        <span>{progress[index]}%</span>
+                      </div>
+                      <div className="h-4 bg-gray-200 border-2 border-black rounded-full overflow-hidden">
+                        <motion.div 
+                          className="h-full bg-brand-blue"
+                          initial={{ width: 0 }}
+                          animate={{ width: `${progress[index]}%` }}
+                        />
+                      </div>
+                    </div>
+                  ) : convertedFiles[index] ? (
+                    <div className="flex items-center justify-between">
+                      <span className="font-black text-green-600 flex items-center gap-2">
+                        <Check size={20} /> 转换成功
+                      </span>
+                      <button 
+                        onClick={() => downloadFile(index)}
+                        className="bg-black text-white px-6 py-2 rounded-xl font-bold flex items-center gap-2 hover:bg-brand-yellow hover:text-black transition-colors"
+                      >
+                        <Download size={16} /> 下载
+                      </button>
+                    </div>
+                  ) : (
+                    <button 
+                      onClick={() => convertFile(index)}
+                      disabled={loading}
+                      className="w-full bg-black text-white px-8 py-3 rounded-xl font-bold flex items-center justify-center gap-2 hover:bg-brand-pink transition-colors disabled:opacity-50"
                     >
-                      再转一个
+                      <RefreshCw size={16} className={loading ? 'animate-spin' : ''} /> 开始转换
                     </button>
-                  </>
-                )}
-              </div>
+                  )}
+                </div>
+              ))}
             </div>
           )}
+        </div>
 
-          <div className="pt-8 border-t-2 border-dashed border-gray-200">
-            <h4 className="font-black text-lg mb-4">使用说明</h4>
-            <ol className="list-decimal list-inside space-y-2 text-gray-600">
-              <li>选择或拖拽FLAC音频文件到上传区域</li>
-              <li>点击"开始转换"按钮</li>
-              <li>等待转换完成（大文件可能需要一些时间）</li>
-              <li>点击"下载MP3"按钮获取转换后的文件</li>
-            </ol>
-            <p className="mt-4 text-sm text-gray-500">
-              ⚠️ 所有转换都在您的浏览器本地完成，文件不会上传到任何服务器，请放心使用
-            </p>
+        <div className="bg-brand-yellow/20 border-4 border-black rounded-[32px] p-8">
+          <h3 className="text-3xl font-black mb-6 uppercase">FLAC 转 MP3</h3>
+          <div className="space-y-4">
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">使用说明</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 上传您的 FLAC 音频文件</li>
+                <li>• 点击开始转换按钮</li>
+                <li>• 等待转换完成</li>
+                <li>• 下载转换好的 MP3 文件</li>
+              </ul>
+            </div>
+
+            <div className="bg-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">特点</h4>
+              <ul className="space-y-2 text-sm font-bold text-gray-700">
+                <li>• 纯前端转换，保护隐私</li>
+                <li>• 文件不上传服务器</li>
+                <li>• 高质量 MP3 输出</li>
+                <li>• 支持批量转换</li>
+              </ul>
+            </div>
+
+            <div className="bg-brand-blue text-white border-2 border-black rounded-xl p-4">
+              <h4 className="font-black mb-2">注意事项</h4>
+              <ul className="space-y-2 text-sm font-bold">
+                <li>• 首次使用需要加载 FFmpeg 引擎</li>
+                <li>• 大文件转换可能需要较长时间</li>
+                <li>• 建议单个文件不超过 100MB</li>
+              </ul>
+            </div>
           </div>
         </div>
       </div>

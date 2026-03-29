@@ -2,6 +2,10 @@ import express from 'express';
 import path from 'path';
 import { fileURLToPath } from 'url';
 import fs from 'fs';
+import mysql from 'mysql2/promise';
+import dotenv from 'dotenv';
+
+dotenv.config();
 
 const app = express();
 app.use(express.json({ limit: '20mb' }));
@@ -9,6 +13,60 @@ app.use(express.json({ limit: '20mb' }));
 const root = path.dirname(fileURLToPath(import.meta.url));
 const uploadsDir = path.join(root, 'public', 'uploads');
 fs.mkdirSync(uploadsDir, { recursive: true });
+
+let db: mysql.Connection | null = null;
+
+async function initDatabase() {
+  try {
+    const tempDb = await mysql.createConnection({
+      host: process.env.MYSQL_HOST || 'localhost',
+      port: Number(process.env.MYSQL_PORT) || 3306,
+      user: process.env.MYSQL_USER || 'root',
+      password: process.env.MYSQL_PASSWORD,
+      charset: 'utf8mb4',
+    });
+    
+    const dbName = process.env.MYSQL_DATABASE || 'guestbook';
+    await tempDb.execute(`CREATE DATABASE IF NOT EXISTS \`${dbName}\` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci`);
+    await tempDb.end();
+    
+    db = await mysql.createConnection({
+      host: process.env.MYSQL_HOST || 'localhost',
+      port: Number(process.env.MYSQL_PORT) || 3306,
+      user: process.env.MYSQL_USER || 'root',
+      password: process.env.MYSQL_PASSWORD,
+      database: dbName,
+      charset: 'utf8mb4',
+    });
+    console.log('✅ MySQL数据库连接成功');
+    
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS messages (
+        id INT AUTO_INCREMENT PRIMARY KEY,
+        name VARCHAR(50) NOT NULL,
+        content VARCHAR(500) NOT NULL,
+        created_at DATE NOT NULL,
+        created_at_full DATETIME DEFAULT CURRENT_TIMESTAMP,
+        INDEX idx_created_at (created_at DESC)
+      ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci
+    `);
+    
+    const [rows] = await db.execute('SELECT COUNT(*) as count FROM messages');
+    if ((rows as any)[0].count === 0) {
+      await db.execute(`
+        INSERT INTO messages (name, content, created_at) VALUES
+        ('设计同行', '喜欢这种粗野主义的风格，排版很大胆，学习了！', '2026-03-21'),
+        ('访客A', '网站设计得很酷，音乐也很好听~', '2026-03-22')
+      `);
+      console.log('✅ 初始化留言数据成功');
+    }
+  } catch (error) {
+    console.error('❌ MySQL数据库连接失败:', error);
+    db = null;
+  }
+}
+
+initDatabase();
 
 app.post('/api/upload/works/:idx', (req, res) => {
   try {
@@ -42,6 +100,49 @@ app.post('/api/upload/works/:idx', (req, res) => {
 
 app.get('/api/ping', (_req, res) => {
   res.json({ ok: true });
+});
+
+app.get('/api/messages', async (_req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ ok: false, error: 'Database not connected' });
+    }
+    const [rows] = await db.execute('SELECT id, name, content, created_at FROM messages ORDER BY created_at_full DESC');
+    res.json({ ok: true, data: rows });
+  } catch (error) {
+    console.error('Error fetching messages:', error);
+    res.status(500).json({ ok: false, error: 'Failed to fetch messages' });
+  }
+});
+
+app.post('/api/messages', async (req, res) => {
+  try {
+    if (!db) {
+      return res.status(500).json({ ok: false, error: 'Database not connected' });
+    }
+    const { name, content } = req.body;
+    
+    if (!name || !name.trim() || !content || !content.trim()) {
+      return res.status(400).json({ ok: false, error: 'Name and content are required' });
+    }
+    
+    const today = new Date().toISOString().split('T')[0];
+    const [result] = await db.execute(
+      'INSERT INTO messages (name, content, created_at) VALUES (?, ?, ?)',
+      [name.trim(), content.trim(), today]
+    );
+    
+    const insertResult = result as any;
+    const [newMessage] = await db.execute(
+      'SELECT id, name, content, created_at FROM messages WHERE id = ?',
+      [insertResult.insertId]
+    );
+    
+    res.json({ ok: true, data: (newMessage as any)[0] });
+  } catch (error) {
+    console.error('Error creating message:', error);
+    res.status(500).json({ ok: false, error: 'Failed to create message' });
+  }
 });
 
 app.use('/uploads', express.static(uploadsDir));
