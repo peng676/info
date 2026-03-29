@@ -903,6 +903,10 @@ function GuestbookSection() {
       const data = await res.json();
       if (data.ok) {
         setMessages(data.data);
+        setError('');
+      } else if (data.fallback) {
+        setMessages(data.fallback);
+        setError('使用演示数据（需要配置云数据库）');
       } else {
         setError('加载留言失败，使用本地数据');
         setMessages([
