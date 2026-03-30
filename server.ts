@@ -108,6 +108,14 @@ app.get('/api/messages', async (_req, res) => {
 
 app.post('/api/messages', async (req, res) => {
   try {
+    console.log('📝 收到提交留言请求');
+    console.log('请求体:', req.body);
+
+    if (!supabaseUrl || !supabaseKey) {
+      console.error('❌ 环境变量未设置');
+      return res.status(500).json({ ok: false, error: '环境变量未设置' });
+    }
+
     const { name, content } = req.body;
 
     if (!name || !name.trim() || !content || !content.trim()) {
@@ -115,6 +123,7 @@ app.post('/api/messages', async (req, res) => {
     }
 
     const today = new Date().toISOString().split('T')[0];
+    console.log('准备插入数据:', { name: name.trim(), content: content.trim(), created_at: today });
 
     const { data, error } = await supabase
       .from('messages')
@@ -124,14 +133,15 @@ app.post('/api/messages', async (req, res) => {
       .select('id, name, content, created_at');
 
     if (error) {
-      console.error('Error creating message:', error);
-      return res.status(500).json({ ok: false, error: 'Failed to create message' });
+      console.error('❌ Supabase 插入错误:', error);
+      return res.status(500).json({ ok: false, error: error.message || 'Failed to create message' });
     }
 
+    console.log('✅ 留言提交成功:', data);
     res.json({ ok: true, data: data[0] });
   } catch (error) {
-    console.error('Error creating message:', error);
-    res.status(500).json({ ok: false, error: 'Failed to create message' });
+    console.error('❌ 提交留言异常:', error);
+    res.status(500).json({ ok: false, error: error instanceof Error ? error.message : 'Failed to create message' });
   }
 });
 
