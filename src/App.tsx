@@ -870,15 +870,15 @@ function SiteFooter() {
           </div>
         </div>
         <div className="flex gap-4">
-            <SocialButton icon={Github} />
-            <SocialButton icon={Twitter} />
-            <SocialButton icon={Linkedin} />
-          </div>
+          <SocialButton icon={Github} />
+          <SocialButton icon={Twitter} />
+          <SocialButton icon={Linkedin} />
         </div>
-      </footer>
-    );
-  }
-  
+      </div>
+    </footer>
+  );
+}
+
 function SocialButton({ icon: Icon }: { icon: any }) {
   return (
     <button className="w-12 h-12 border-4 border-black rounded-xl flex items-center justify-center hover:bg-brand-yellow transition-all shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] active:translate-x-1 active:translate-y-1 active:shadow-none cursor-pointer">
@@ -886,8 +886,9 @@ function SocialButton({ icon: Icon }: { icon: any }) {
     </button>
   );
 }
+
 function GuestbookSection() {
-    const [messages, setMessages] = useState<{id: number, name: string, content: string, created_at: string}[]>([]);
+  const [messages, setMessages] = useState<{id: number, name: string, content: string, created_at: string}[]>([]);
   const [name, setName] = useState('');
   const [content, setContent] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);

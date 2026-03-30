@@ -75,7 +75,7 @@ app.get('/api/messages', async (_req, res) => {
     }
 
     const { data, error } = await supabase
-      .from('messages')
+      .from('消息')
       .select('id, name, content, created_at')
       .order('created_at_full', { ascending: false });
 
@@ -126,7 +126,7 @@ app.post('/api/messages', async (req, res) => {
     console.log('准备插入数据:', { name: name.trim(), content: content.trim(), created_at: today });
 
     const { data, error } = await supabase
-      .from('messages')
+      .from('消息')
       .insert([
         { name: name.trim(), content: content.trim(), created_at: today }
       ])
